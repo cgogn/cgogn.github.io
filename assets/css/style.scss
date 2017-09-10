@@ -2,3 +2,25 @@
 ---
 
 @import "{{ site.theme }}";
+
+.inner {
+	max-width: 10000px;
+}
+
+#main_content_wrap {
+	display: flex;
+	flex-direction: row;
+}
+
+#main_content {
+	flex: 5;
+}
+
+#side_menu {
+	padding-top: 40px;
+	flex: 1;
+}
+
+#side_menu ul {
+	list-style: none;
+}
