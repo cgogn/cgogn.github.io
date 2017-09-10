@@ -7,6 +7,10 @@
 	max-width: 10000px;
 }
 
+#header_wrap header {
+	padding-left: 50px;
+}
+
 #main_content_wrap {
 	display: flex;
 	flex-direction: row;
@@ -29,6 +33,7 @@
 #menu_root {
 	border-right: 1px solid rgb(15, 121, 208);
 	padding-right: 10px;
+	font-weight: bold;
 }
 #side_menu ul ul {
 	list-style: none;
