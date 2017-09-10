@@ -85,3 +85,11 @@ The indexing of the cells of any dimension is completely optional. If the cells 
 
 ## Implementation
 
+CGoGN (Combinatorial and Geometric modeling with Generic N-dimensional Maps) is a C++ library that provides an efficient index-based implementation of n-dimensional combinatorial maps.
+
+### Containers
+
+<p align="center">
+	<img alt="Containers" src="/assets/img/containers.png">
+	<em>Containers of a 2-dimensional combinatorial map with vertex and face embedding. The dart container stores φ1 and φ2 links to other darts and V and F links to the associated vertices and faces attributes.</em>
+</p>
