@@ -23,12 +23,14 @@
 	padding-right: 20px;
 }
 
-#side_menu > ul {
+#side_menu ul {
 	list-style: none;
+}
+#menu_root {
 	border-right: 1px solid rgb(15, 121, 208);
 	padding-right: 10px;
 }
-#side_menu > ul ul {
+#side_menu ul ul {
 	list-style: none;
 	padding-right: 20px;
 	font-size: 0.9em;
