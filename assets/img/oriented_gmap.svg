@@ -14,7 +14,10 @@
    version="1.1"
    id="svg27771"
    height="233.91275"
-   width="864.71509">
+   width="864.71509"
+   inkscape:export-filename="/Users/kraemer/Sites/cgogn.github.io/assets/img/oriented_gmap.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs27773">
     <marker
@@ -348,7 +351,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="400.83297"
+     inkscape:cx="237.69333"
      inkscape:cy="98.664362"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -375,7 +378,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>

@@ -14,7 +14,10 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="incidence_graph.svg">
+   sodipodi:docname="incidence_graph.svg"
+   inkscape:export-filename="/Users/kraemer/Sites/cgogn.github.io/assets/img/incidence_graph.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs4">
     <marker
@@ -138,7 +141,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
-     inkscape:cx="432.24856"
+     inkscape:cx="316.89142"
      inkscape:cy="85.339166"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -162,7 +165,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>

@@ -14,7 +14,10 @@
    id="svg13740"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="cell_tuples.svg">
+   sodipodi:docname="cell_tuples.svg"
+   inkscape:export-filename="/Users/kraemer/Sites/cgogn.github.io/assets/img/cell_tuples.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs13742">
     <marker
@@ -236,7 +239,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.7"
-     inkscape:cx="617.35631"
+     inkscape:cx="386.64202"
      inkscape:cy="11.689129"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -259,7 +262,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
