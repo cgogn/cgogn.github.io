@@ -2,5 +2,8 @@
 //= require jquery.sticky
 
 $(document).ready(function(){
-    $("#side_menu ul").sticky({ topSpacing: 0 });
+    $("#side_menu>ul").sticky({
+		topSpacing: 0,
+		widthFromWrapper: false
+	});
 });
