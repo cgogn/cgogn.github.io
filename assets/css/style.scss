@@ -26,6 +26,11 @@
 #side_menu ul {
 	list-style: none;
 }
+#side_menu ul ul {
+	padding-right: 20px;
+	font-size: 0.9em;
+	margin-bottom: 0;
+}
 
 img {
 	max-width: 500px;
