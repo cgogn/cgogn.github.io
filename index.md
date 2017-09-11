@@ -2,6 +2,10 @@
 title: Doc
 ---
 
+## Foreword
+
+The following documentation starts with an [Introduction](#introduction) to meshes and combinatorial maps, the underlying model used in CGoGN. Depending on your current understanding of this model and on the level you plan to use the library, you may or may not need to read it. So feel free to jump directly to the [Implementation](#implementation) part.
+
 ## Introduction
 
 A __mesh__ is the cellular decomposition of geometric objects such as curves, surfaces or volumes.
@@ -68,7 +72,7 @@ A G-map is able to represent orientable or non-orientable quasi-manifolds. Howev
 
 <p align="center">
 	<img alt="Oriented map" src="/assets/img/oriented_gmap.png">
-	<em>Left: the darts of the G-map have been partitionned in two sets, each corresponding to one of the two orientations of the object. Right: the oriented combinatorial map yielded by dart d; φ1 = α1 ◦ α0 and φ2 = α2 ◦ α0 relations are represented respectively by blue-green and blue-red links.</em>
+	<em>Figure 4: Left: the darts of the G-map have been partitionned in two sets, each corresponding to one of the two orientations of the object. Right: the oriented combinatorial map yielded by dart d; φ1 = α1 ◦ α0 and φ2 = α2 ◦ α0 relations are represented respectively by blue-green and blue-red links.</em>
 </p>
 
 As they represent the exact same object, keeping the two orientations of an orientable G-map is not necessary and one of these sets can be dropped, leading to a twice more compact representation. One orientation of an orientable G-map is actually a combinatorial map, defined as a set of darts D along with n functions φi : D → D, 1 ≤ i ≤ n, with φi = αi ◦ α0. The φ1 function is a permutation that links the ordered vertices around oriented faces. The φi, i ≤ 2 ≤ n functions are involutions, as stated by the constraint expressed above on the αi involutions. From a constructive point of view, each of these involutions allows to glue pairs of i-dimensional cells along their common (i-1)-dimensional boundary cell.
@@ -91,5 +95,5 @@ CGoGN (Combinatorial and Geometric modeling with Generic N-dimensional Maps) is 
 
 <p align="center">
 	<img alt="Containers" src="/assets/img/containers.png">
-	<em>Containers of a 2-dimensional combinatorial map with vertex and face embedding. The dart container stores φ1 and φ2 links to other darts and V and F links to the associated vertices and faces attributes.</em>
+	<em>Figure 5: Containers of a 2-dimensional combinatorial map with vertex and face embedding. The dart container stores φ1 and φ2 links to other darts and V and F links to the associated vertices and faces attributes.</em>
 </p>
