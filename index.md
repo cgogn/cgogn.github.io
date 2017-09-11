@@ -104,16 +104,38 @@ A map in CGoGN is encoded a set of attribute containers. The only mandatory cont
 	<em>Figure 5: Containers of a 2-dimensional combinatorial map with vertex and face embedding. The dart container stores φ1 and φ2 indices of linked darts and V and F indices of the associated vertices and faces attributes.</em>
 </p>
 
-### Map types
+### Basic types
 
-Several map types are defined in CGoGN (one for each dimension). For example, the following code will declare a 2-dimensional combinatorial map:
+CGoGN defines symbols in the `cgogn` namespace which will be omitted in the following.
+
+The most basic type defined in CGoGN is `Dart` which stores an index in the Dart container.
+
+An enumeration of orbits is also defined. These orbits correspond to the different cells that can be defined in a combinatorial map. They are defined as follows:
+```c++
+enum Orbit: uint32
+{
+    DART = 0,      // 1d vertex
+    PHI1,          // 1d cycle, 2d face
+    PHI2,          // 2d edge
+    PHI21,         // 2d vertex
+    PHI1_PHI2,     // 2d connected component, 3d volume
+    PHI1_PHI3,     // 3d face
+    PHI2_PHI3,     // 3d edge
+    PHI21_PHI31,   // 3d vertex
+    PHI1_PHI2_PHI3 // 3d connected component
+};
+```
+
+The `Cell<Orbit>` template class stores a Dart. These cell types can actually be seen as orbit-typed Darts.
+
+A map contains a Dart container and a container for each of the orbits defined in the above enumeration.
+
+Several map types are defined (one for each dimension). For example, the following code will declare a 2-dimensional combinatorial map:
 ```c++
 cgogn::CMap2 map;
 ```
 
-### Cell types
-
-
+Each map type provides several convenient internal definitions for its cells types. For example a `CMap2` provides the following cell types: `CMap2::Vertex`, `CMap2::Edge`, `CMap2::Face`, `CMap2::Volume` which are defined respectively as: `Cell<Orbit::PHI21>`, `Cell<Orbit::PHI2>`, `Cell<Orbit::PHI1>`, `Cell<Orbit::PHI1_PHI2>`.
 
 ### Attributes
 
