@@ -89,7 +89,7 @@ The indexing of the cells of any dimension is completely optional. If the cells 
 
 ## Implementation
 
-CGoGN (Combinatorial and Geometric modeling with Generic N-dimensional Maps) is a C++ library that provides an efficient index-based implementation of n-dimensional combinatorial maps.
+CGoGN provides an efficient C++ implementation of combinatorial maps. Its main features are combinatorial maps representation, manipulation, traversal and a dynamic attribute mechanism. It is also designed to take advantage of parallel architectures.
 
 ### Containers
 
