@@ -128,14 +128,11 @@ enum Orbit: uint32
 
 The `Cell<Orbit>` template class stores a Dart. These cell types can actually be seen as orbit-typed Darts.
 
-A map contains a Dart container and a container for each of the orbits defined in the above enumeration.
+A combinatorial map contains a Dart container and a container for each of the orbits defined in the above enumeration. These containers will be used to store the attributes associated to the cells of each embedded orbit. Containers corresponding to non-embedded orbits will remain unused during the lifetime of the map.
 
-Several map types are defined (one for each dimension). For example, the following code will declare a 2-dimensional combinatorial map:
-```c++
-cgogn::CMap2 map;
-```
+Several map types are defined (one for each dimension). For example, a 2-dimensional combinatorial map can be declared like that: `CMap2 map;`.
 
-Each map type provides several convenient internal definitions for its cells types. For example a `CMap2` provides the following cell types: `CMap2::Vertex`, `CMap2::Edge`, `CMap2::Face`, `CMap2::Volume` which are defined respectively as: `Cell<Orbit::PHI21>`, `Cell<Orbit::PHI2>`, `Cell<Orbit::PHI1>`, `Cell<Orbit::PHI1_PHI2>`.
+Each map type provides several convenient internal definitions for its cells types. For example a `CMap2` provides the following cell types: `CMap2::Vertex`, `CMap2::Edge`, `CMap2::Face`, `CMap2::Volume`. These cells are defined respectively as: `Cell<Orbit::PHI21>`, `Cell<Orbit::PHI2>`, `Cell<Orbit::PHI1>`, `Cell<Orbit::PHI1_PHI2>`.
 
 ### Attributes
 
