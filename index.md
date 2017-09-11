@@ -4,7 +4,7 @@ title: Doc
 
 ## Foreword
 
-The following documentation starts with an [Introduction](#introduction) to meshes and combinatorial maps, the underlying model used in CGoGN. Depending on your current understanding of this model and on the level you plan to use the library, you may or may not need to read it. So feel free to jump directly to the [Implementation](#implementation) part.
+The following documentation starts with an [Introduction](#introduction) to meshes and combinatorial maps, the underlying model used in CGoGN. Depending on your current understanding of this model and on the level on which you plan to use the library, you may or may not need to read it. So feel free to jump directly to the [Implementation](#implementation) part.
 
 ## Introduction
 
@@ -93,13 +93,31 @@ CGoGN provides an efficient C++ implementation of oriented combinatorial maps. I
 
 ### Attribute containers
 
-The central data structure used in CGoGN is __attribute containers__. An attribute container is a set of __attributes__ of arbitrary type that all have the same number of records. Attributes can be dynamically added and removed in an attribute container. An index identifies a tuple of records, one in each attribute. Records can be dynamically added and removed in an attribute container. Removed entries are actually marked as removed and skipped during the traversals. They are left available for further record additions.
+The central data structure used in CGoGN is __attribute containers__. An attribute container is a set of __attributes__ of arbitrary type that all have the same number of records. Attributes can be dynamically added and removed in an attribute container. An index identifies a tuple of records, one in each attribute. Records can be dynamically added and removed in an attribute container. Removed entries are actually only marked as removed and skipped during the traversals. They are left available for further record additions.
 
 Each __attribute__ is stored as a chunk array, i.e. a set of fixed size arrays. It allows the size of the attribute to grow while leaving all existing elements in place. Chunk size is chosen as a power of 2 so that the arithmetic operations needed to access the record of a given index (division and modulo) are very efficient.
 
-A map in CGoGN is encoded a set of attribute containers. The only mandatory container is the Dart container. According to the dimension of the map, it stores a variable number of attributes that encode the topological relations φ1, ..., φn. Each dart being represented by its index in the Dart container, these attributes store indices of linked darts in the Dart container. For each embedded orbit, the Dart container maintains an attribute that stores for each dart the index of the corresponding orbit. For example, in the map illustrated in Figure 5, the Vertex and Face orbits are embedded. The Dart container maintains _V_ and _F_ attributes that store the Vertex and Face index of each dart. Obviously, as explained in the [embedding](#embedding) section, all the darts of a same orbit share the same index.
+A map in CGoGN is encoded a set of attribute containers. The only mandatory container is the Dart container. According to the dimension of the map, it stores a variable number of attributes that encode the topological relations φ1, ..., φn. Each dart being represented by its index in the Dart container, these attributes store indices of linked darts in the Dart container. For each embedded cell dimension, the Dart container maintains an attribute that stores for each dart the index of its corresponding cell orbit. These indices correspond to entries in a dedicated attribute container. For example, in the map illustrated in Figure 5, Vertex and Face cells are embedded. The Dart container maintains _V_ and _F_ attributes that store the Vertex and Face index of each dart. Obviously, as explained in the [embedding](#embedding) section, all the darts of a same orbit share the same index. The Vertex and Face attribute containers store the data associated with each vertex and face cell of the map.
 
 <p align="center">
 	<img alt="Containers" src="/assets/img/containers.png">
-	<em>Figure 5: Containers of a 2-dimensional combinatorial map with vertex and face embedding. The dart container stores φ1 and φ2 links to other darts and V and F links to the associated vertices and faces attributes.</em>
+	<em>Figure 5: Containers of a 2-dimensional combinatorial map with vertex and face embedding. The dart container stores φ1 and φ2 indices of linked darts and V and F indices of the associated vertices and faces attributes.</em>
 </p>
+
+### Map types
+
+Several map types are defined in CGoGN (one for each dimension). For example, the following code will declare a 2-dimensional combinatorial map:
+```c++
+cgogn::CMap2 map;
+```
+
+### Cell types
+
+
+
+### Attributes
+
+
+
+### Global traversals
+
