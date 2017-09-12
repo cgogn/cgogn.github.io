@@ -93,11 +93,11 @@ CGoGN provides an efficient C++ implementation of oriented combinatorial maps. I
 
 ### Attribute containers
 
-The central data structure used in CGoGN is __attribute containers__. An attribute container is a set of __attributes__ of arbitrary type that all have the same number of records. Attributes can be dynamically added and removed in an attribute container. An index identifies a tuple of records, one in each attribute. Records can be dynamically added and removed in an attribute container. Removed entries are actually only marked as removed and skipped during the traversals. They are left available for further record additions.
+The central data structure used in CGoGN is __attribute containers__. An attribute container is a set of __attributes__ of arbitrary type that all have the same number of records. Attributes can be dynamically added and removed in an attribute container. An index identifies a tuple of records, one in each attribute of the container. Records can be dynamically added and removed in an attribute container. Removed entries are actually only marked as removed and skipped during the traversals. They are left available for further record additions.
 
 Each __attribute__ is stored as a chunk array, i.e. a set of fixed size arrays. It allows the size of the attribute to grow while leaving all existing elements in place. Chunk size is chosen as a power of 2 so that the arithmetic operations needed to access the record of a given index (division and modulo) are very efficient.
 
-A map in CGoGN is encoded a set of attribute containers. The only mandatory container is the Dart container. According to the dimension of the map, it stores a variable number of attributes that encode the topological relations φ1, ..., φn. Each dart being represented by its index in the Dart container, these attributes store indices of linked darts in the Dart container. For each embedded cell dimension, the Dart container maintains an attribute that stores for each dart the index of its corresponding cell orbit. These indices correspond to entries in a dedicated attribute container. For example, in the map illustrated in Figure 5, Vertex and Face cells are embedded. The Dart container maintains _V_ and _F_ attributes that store the Vertex and Face index of each dart. Obviously, as explained in the [embedding](#embedding) section, all the darts of a same orbit share the same index. The Vertex and Face attribute containers store the data associated with each vertex and face cell of the map.
+A map in CGoGN is encoded as a set of attribute containers. The only mandatory container is the Dart container. According to the dimension of the map, it stores a variable number of attributes that encode the topological relations φ1, ..., φn. Each dart being represented by its index in the Dart container, these attributes store indices of linked darts in the Dart container. For each embedded cell dimension, the Dart container maintains an attribute that stores for each dart the index of its corresponding cell orbit. These indices correspond to entries in a dedicated attribute container. For example, in the map illustrated in Figure 5, Vertex and Face cells are embedded. The Dart container maintains _V_ and _F_ attributes that store the Vertex and Face index of each dart. Obviously, as explained in the [embedding](#embedding) section, all the darts of a same orbit share the same index. The Vertex and Face attribute containers store the data associated with each vertex and face cell of the map.
 
 <p align="center">
 	<img alt="Containers" src="/assets/img/containers.png">
@@ -128,15 +128,38 @@ enum Orbit: uint32
 
 The `Cell<Orbit>` template class stores a Dart. These cell types can actually be seen as orbit-typed Darts.
 
-A combinatorial map contains a Dart container and a container for each of the orbits defined in the above enumeration. These containers will be used to store the attributes associated to the cells of each embedded orbit. Containers corresponding to non-embedded orbits will remain unused during the lifetime of the map.
+A combinatorial map is composed of a Dart container and a container for each of the orbits defined in the above enumeration. These containers can be used to store the attributes associated to the cells of each embedded orbit. Containers corresponding to non-embedded orbits will remain unused during the lifetime of the map.
 
 Several map types are defined (one for each dimension). For example, a 2-dimensional combinatorial map can be declared like that: `CMap2 map;`.
 
-Each map type provides several convenient internal definitions for its cells types. For example a `CMap2` provides the following cell types: `CMap2::Vertex`, `CMap2::Edge`, `CMap2::Face`, `CMap2::Volume`. These cells are defined respectively as: `Cell<Orbit::PHI21>`, `Cell<Orbit::PHI2>`, `Cell<Orbit::PHI1>`, `Cell<Orbit::PHI1_PHI2>`.
+Each map type provides several convenience internal definitions for its cells types. For example a `CMap2` provides the following cell types: `CMap2::Vertex`, `CMap2::Edge`, `CMap2::Face`, `CMap2::Volume`. These cells are actually defined respectively as: `Cell<Orbit::PHI21>`, `Cell<Orbit::PHI2>`, `Cell<Orbit::PHI1>`, `Cell<Orbit::PHI1_PHI2>` which correspond to the orbits of these cells in a 2-dimensional map.
 
 ### Attributes
 
+Attributes of any type can be added in a map. The `Attribute<T, Orbit>` template class provides a way to access to the `T` type values associated to the `Cell<Orbit>` cells of a map. Here again, convenience definitions are provided in the map types: `CMap2::VertexAttribute<T>`, `CMap2::EdgeAttribute<T>`, etc.
 
+For example, a Vertex attribute storing an integer value on each vertex can be added in a 2-dimensional map like that:
+```c++
+CMap2 map;
+CMap2::VertexAttribute<uint32> attr = map.add_attribute<uint32, CMap2::Vertex>("attr");
+```
+
+An existing attribute can also be obtained by its name. As a corresponding attribute may not exist in the map, the validity of the obtained object can then be verified:
+```c++
+CMap2::FaceAttribute<double> area = map.get_attribute<double, CMap2::Face>("area");
+if (!area.is_valid())
+{
+	// there were no Face attribute of this type having this name in the map
+}
+```
+
+Attribute values can be traversed globally using the for-range syntax:
+```c++
+for (const T& v : attr)
+{
+	// do something with v
+}
+```
 
 ### Global traversals
 
