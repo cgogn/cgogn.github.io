@@ -220,8 +220,11 @@ map.parallel_foreach_cell([&] (CMap2::Vertex v)
 });
 ```
 
-It is possible to aggregate some results coming from the parallel processing of several threads. In the following example, the average value of an Edge attribute is computed in parallel. Each thread computes its own value corresponding to the fraction of the mesh that it has processed, and then the global result is computed:
+It is possible to aggregate some results coming from the parallel processing of several threads. In the following example, the average value of an Edge attribute is computed in parallel. Each thread accumulates the values and number of elements corresponding to the fraction of the mesh that it processes, and then the global result is computed:
 ```c++
+// given a CMap2 map
+// given a CMap2::EdgeAttribute<double> length
+
 std::vector<double> sum_per_thread(thread_pool()->nb_workers(), 0.0);
 std::vector<uint32> nb_per_thread(thread_pool()->nb_workers(), 0);
 
