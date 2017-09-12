@@ -161,14 +161,14 @@ for (const T& v : attr)
 }
 ```
 
-Given a cell of the map, the value associated to this cell for an attribute can be directly accessed using the brackets operator:
+Given a cell of the map, the value associated to this cell for an attribute can be directly accessed using the bracket operator:
 ```c++
 // given two CMap2::Face f1, f2
 area[f1] = 3.4;
 double sum = area[f1] + area[f2];
 ```
 
-Under the hood, this operator will first get the embedding index of the cell and then access to the value stored at this index in the corresponding Cell attribute container. As the embedding index of a cell does not depend on the accessed attribute, in the case of accessing to multiple attributes for a same cell, it can be more efficient to first get the embedding index, and then directly use this index to access to the values associated to the cell:
+Under the hood, this operator will first get the embedding index of the cell and then access to the value stored at this index in the corresponding Cell attribute container. The embedding index of a cell does not depend on the accessed attribute. As the bracket operator can also be given directly the index of the cell, in the case of accessing to multiple attributes for a same cell, it can be more efficient to first get the embedding index, and then directly use this index to access to the values associated to the cell:
 ```c++
 // given a CMap2::Face f
 uint32 findex = map.embedding(f);
@@ -177,3 +177,11 @@ attr1[findex] = attr2[findex] + attr3[findex];
 
 ### Global traversals
 
+The cells of the map can be traversed using the `foreach_cell` method. This method takes a callable that takes a `Cell<Orbit>` as parameter. The type of this parameter determines the cells that will be traversed by the foreach method. For example, the following call will traverse the vertices of the map and call the given lambda expression on each vertex:
+```c++
+// given a CMap2 map
+map.foreach_cell([&] (CMap2::Vertex v)
+{
+    // do something with v
+});
+```
