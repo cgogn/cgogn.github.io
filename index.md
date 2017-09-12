@@ -136,7 +136,7 @@ Each map type provides several convenience internal definitions for its cells ty
 
 ### Attributes
 
-Attributes of any type can be added in a map. The `Attribute<T, Orbit>` template class provides a way to access to the `T` type values associated to the `Cell<Orbit>` cells of a map. Here again, convenience definitions are provided in the map types: `CMap2::VertexAttribute<T>`, `CMap2::EdgeAttribute<T>`, etc.
+Attributes of any type can be added in a map. The `Attribute<T, Orbit>` template class provides a way to access to the type `T` values associated to the `Cell<Orbit>` cells of a map. Here again, convenience definitions are provided in the map types: `CMap2::VertexAttribute<T>`, `CMap2::EdgeAttribute<T>`, etc.
 
 For example, a Vertex attribute storing an integer value on each vertex can be added in a 2-dimensional map like that:
 ```c++
@@ -144,21 +144,35 @@ CMap2 map;
 CMap2::VertexAttribute<uint32> attr = map.add_attribute<uint32, CMap2::Vertex>("attr");
 ```
 
-An existing attribute can also be obtained by its name. As a corresponding attribute may not exist in the map, the validity of the obtained object can then be verified:
+An existing attribute can also be obtained by its name. As the requested attribute may not exist in the map, the validity of the obtained object can then be verified:
 ```c++
 CMap2::FaceAttribute<double> area = map.get_attribute<double, CMap2::Face>("area");
 if (!area.is_valid())
 {
-	// there were no Face attribute of this type having this name in the map
+    // there were no Face attribute of this type having this name in the map
 }
 ```
 
-Attribute values can be traversed globally using the for-range syntax:
+Attribute values can be traversed globally using the range-based for loop syntax:
 ```c++
 for (const T& v : attr)
 {
-	// do something with v
+    // do something with v
 }
+```
+
+Given a cell of the map, the value associated to this cell for an attribute can be directly accessed using the brackets operator:
+```c++
+// given two CMap2::Face f1, f2
+area[f1] = 3.4;
+double sum = area[f1] + area[f2];
+```
+
+Under the hood, this operator will first get the embedding index of the cell and then access to the value stored at this index in the corresponding Cell attribute container. As the embedding index of a cell does not depend on the accessed attribute, in the case of accessing to multiple attributes for a same cell, it can be more efficient to first get the embedding index, and then directly use this index to access to the values associated to the cell:
+```c++
+// given a CMap2::Face f
+uint32 findex = map.embedding(f);
+attr1[findex] = attr2[findex] + attr3[findex];
 ```
 
 ### Global traversals
