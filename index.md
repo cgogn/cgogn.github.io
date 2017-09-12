@@ -177,7 +177,7 @@ attr1[findex] = attr2[findex] + attr3[findex];
 
 ### Global traversals
 
-The cells of the map can be traversed using the `foreach_cell` method. This method takes a callable that takes a `Cell<Orbit>` as parameter. The type of this parameter determines the cells that will be traversed by the foreach method. For example, the following call will traverse the vertices of the map and call the given lambda expression on each vertex:
+The cells of the map can be traversed using the `foreach_cell` method. This method takes a callable that expects a `Cell<Orbit>` as parameter. The type of this parameter determines the type of the cells that will be traversed by the foreach method. For example, the following call will traverse the vertices of the map and call the given lambda expression on each vertex:
 ```c++
 // given a CMap2 map
 map.foreach_cell([&] (CMap2::Vertex v)
@@ -185,3 +185,35 @@ map.foreach_cell([&] (CMap2::Vertex v)
     // do something with v
 });
 ```
+
+#### Early stop
+
+If one wants to stop the traversal before all the cells have been processed, the provided callable has to return a boolean value. As soon as the callable returns false, the traversal is stopped. In the following example, we are looking up for the first encountered vertex for which the Vec3 position value is on the negative side of the x=0 plan. If after the traversal, the declared Vertex is not valid, it means such a vertex has not been found in the map:
+```c++
+// given a CMap2 map
+// given a CMap2::VertexAttribute<Vec3> position
+CMap2::Vertex lookedUpV;
+map.foreach_cell([&] (CMap2::Vertex v) -> bool
+{
+    if (position[v][0] < 0.0)
+	{
+        lookedUpV = v;
+        return false;
+    }
+    return true;
+});
+if (!lookedUpV.is_valid())
+{
+	// no such vertex was found
+}
+```
+
+#### Parallelism
+
+
+
+#### Filters
+
+
+
+#### Traversors
