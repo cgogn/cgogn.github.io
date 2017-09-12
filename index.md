@@ -192,25 +192,55 @@ If one wants to stop the traversal before all the cells have been processed, the
 ```c++
 // given a CMap2 map
 // given a CMap2::VertexAttribute<Vec3> position
-CMap2::Vertex lookedUpV;
+CMap2::Vertex looked_up_v;
 map.foreach_cell([&] (CMap2::Vertex v) -> bool
 {
     if (position[v][0] < 0.0)
-	{
-        lookedUpV = v;
+    {
+        looked_up_v = v;
         return false;
     }
     return true;
 });
-if (!lookedUpV.is_valid())
+if (!looked_up_v.is_valid())
 {
-	// no such vertex was found
+    // no such vertex was found
 }
 ```
 
 #### Parallelism
 
+CGoGN can take advantage of parallel architectures to speed-up global traversals. A parallel traversal of the cells can be done using the `parallel_foreach_cell` method. The processing of the cells of the map will be spread among a number of threads that depends on the detected underlying hardware concurrency.
+```c++
+// given a CMap2 map
+// given two CMap2::VertexAttribute<Vec3> position, displ
+map.parallel_foreach_cell([&] (CMap2::Vertex v)
+{
+    position[v] += displ[v];
+});
+```
 
+It is possible to aggregate some results coming from the parallel processing of several threads. In the following example, the average value of an Edge attribute is computed in parallel. Each thread computes its own value corresponding to the fraction of the mesh that it has processed, and then the global result is computed:
+```c++
+std::vector<double> sum_per_thread(thread_pool()->nb_workers(), 0.0);
+std::vector<uint32> nb_per_thread(thread_pool()->nb_workers(), 0);
+
+map.parallel_foreach_cell([&] (CMap2::Edge e)
+{
+    uint32 thread_index = current_thread_index();
+    sum_per_thread[thread_index] += length[e];
+    nb_per_thread[thread_index]++;
+});
+
+double sum = 0.0;
+for (double d : sum_per_thread) sum += d;
+uint32 nb = 0;
+for (uint32 n : nb_per_thread) nb += n;
+
+double average = sum / double(nb);
+```
+
+Early stop is not available when doing parallel traversals.
 
 #### Filters
 
