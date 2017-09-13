@@ -2,11 +2,11 @@
 title: Doc
 ---
 
-## Foreword
+# Foreword
 
 The following documentation starts with an [Introduction](#introduction) to meshes and combinatorial maps, the underlying model used in CGoGN. Depending on your current understanding of this model and on the level on which you plan to use the library, you may or may not need to read it. So feel free to jump directly to the [Implementation](#implementation) part.
 
-## Introduction
+# Introduction
 
 A __mesh__ is the cellular decomposition of geometric objects such as curves, surfaces or volumes.
 
@@ -23,13 +23,13 @@ The data structure should:
 
 Many existing mesh data structures actually find their roots in the notion of __combinatorial map__, a mathematically defined structure that represents the subdivision of n-dimensional manifolds.
 
-## Combinatorial maps
+# Combinatorial maps
 
 Combinatorial maps are dimension-independent and rely on a single element along with a simple set of relations. All the information about the cells and their incidence and adjacency relations is contained within this simple model. All neighborhood traversals are resolved in optimal time (linear in the number of traversed cells) without having to maintain any additional information.
 
 As in other topological models, there is a strong separation between the topological structure of the subdivision and the attributes that can be associated to the cells.
 
-### From incidence graph to cell-tuples
+## From incidence graph to cell-tuples
 
 Figure 1 shows a simple cellular decomposition of a 2-dimensional object and its incidence graph that we use as a running example in our definition.
 
@@ -47,7 +47,7 @@ In a n-dimensional cellular decomposition, a cell-tuple is defined as an ordered
 
 Adjacency relations are defined on the cell-tuples: two cell-tuples are said to be i-adjacent if their path in the incidence graph share all but the i-dimensional cell. For example, (F1, E2, V1) and (F1, E2, V2) are 0-adjacent. In the context of the cellular decomposition of a quasi-manifold, it has been shown that these n+1 adjacency relations put the cell-tuples in a one-to-one relation (except for the n-adjacency at the boundary of the object where cell-tuples do not have any mate). Based on these definitions, generalized-maps (or G-maps) have been proposed as a model for the representation of the cellular decomposition of n-dimensional quasi-manifolds.
 
-### Generalized maps
+## Generalized maps
 
 Generalized maps encode a cellular decomposition with a set D of abstract elements called darts that are in one-to-one correspondance with the cell-tuples. A set of n+1 functions αi : D → D, 0 ≤ i ≤ n are defined based on the i-adjacency relations of the cell-tuples. Figure 3 shows the G-map corresponding to the cellular decomposition of previous example. Following the previously mentioned properties of i-adjacencies on cell-tuples, αi functions are involutions, i.e. functions such that ∀d ∈ D, αi(αi(d)) = d.
 
@@ -66,7 +66,7 @@ Figure 3 illustrates these notions. Starting from the same dart d, depending on 
 
 Now we only need a way to construct these sets of darts. Following the previous definitions, αi(d) is the dart that represents the same cells as d except from the i-dimensional cell. All the other αj , j = i functions will lead to darts that share the same i-cell as d. It follows that starting from a dart, the set of darts representing the same i-cell can be obtained by applying successively all the functions that maintain the i-dimensional cell unchanged, i.e. { αj, j ∈ {0, 1, ..., i−1, i+1, ..., n} }. Such sets of darts are formally defined as orbits, noted: < α0, ..., αi−1, αi+1, ..., αn >. For example in Figure 3, the vertex, edge and face of d are defined respectively by the following orbits: < α1, α2 > (d), < α0, α2 > (d) and < α0, α1 > (d).
 
-### Oriented combinatorial maps
+## Oriented combinatorial maps
 
 A G-map is able to represent orientable or non-orientable quasi-manifolds. However, a representation domain restricted to orientable objects is sufficient in many application contexts. In this case, a more compact model can be used. The orientability of a given G-map can be determined with a binary coloring process of its darts following this rule: a dart of a given color can only be linked to darts of the other color. Starting with an arbitrary dart, if the whole object can be colored this way, then the object is orientable. In this case, the darts of the G-map are partitionned in two sets D-black and D-white of equal cardinality, each one representing one of the two orientations of the object. For any dart d ∈ D, < φ1, ..., φn > (d) with φi = αi ◦ α0 is the set of darts corresponding to the orientation yielded by d. For example, if d ∈ D-black, then < φ1, ..., φn > (d) = D-black. Figure 4 shows the application of this process.
 
@@ -79,7 +79,7 @@ As they represent the exact same object, keeping the two orientations of an orie
 
 The orbits that define the cells are the following. For cells of dimension i ≥ 1, the sets of darts that represent the cells are defined by the orbit < φ1, ..., φi−1, φi+1, ..., φn >. Like for G-maps, starting from any dart, all the functions that maintain the i-dimensional cell unchanged are applied. For vertices, the orbit is < φ1 ◦ φ2, ..., φ1 ◦ φn >.
 
-### Embedding
+## Embedding
 
 Maps and G-maps only define the topology of the cellular decomposition of quasi-manifolds, i.e. the cells – represented implicitly by sets of darts – and the neighborhood relations between them. In order to consistently attach attributes to cells, any data attached to a cell has to be linked to all the darts of this cell. The most flexible solution is to associate an index to each cell. Any data associated to this index is then associated to the corresponding cell.
 
@@ -87,11 +87,11 @@ To model this idea, additional functions can be defined on maps. For each i, 0 �
 
 The indexing of the cells of any dimension is completely optional. If the cells of one or even all dimensions are not indexed, the cellular decomposition and its topology are still completely defined. Indeed, cell enumeration and neighborhood traversals are performed using exclusively the darts and their relations.
 
-## Implementation
+# Implementation
 
 CGoGN provides an efficient C++ implementation of oriented combinatorial maps. Its main features are combinatorial maps representation, manipulation, traversal and a dynamic attribute mechanism. It is also designed to take advantage of parallel architectures.
 
-### Attribute containers
+## Attribute containers
 
 The central data structure used in CGoGN is __attribute containers__. An attribute container is a set of __attributes__ of arbitrary type that all have the same number of records. Attributes can be dynamically added and removed in an attribute container. An index identifies a tuple of records, one in each attribute of the container. Records can be dynamically added and removed in an attribute container. Removed entries are actually only marked as removed and skipped during the traversals. They are left available for further record additions.
 
@@ -104,7 +104,7 @@ A map in CGoGN is encoded as a set of attribute containers. The only mandatory c
 	<em>Figure 5: Containers of a 2-dimensional combinatorial map with vertex and face embedding. The dart container stores φ1 and φ2 indices of linked darts and V and F indices of the associated vertices and faces attributes.</em>
 </p>
 
-### Basic types
+## Basic types
 
 CGoGN defines symbols in the `cgogn` namespace which will be omitted in the following.
 
@@ -126,7 +126,7 @@ enum Orbit: uint32
 };
 ```
 
-The `Cell<Orbit>` template class stores a Dart. These cell types can actually be seen as orbit-typed Darts.
+The `Cell<Orbit>` template class stores a Dart that is publicly available as a `dart` property. These cell types can actually be seen as orbit-typed Darts.
 
 A combinatorial map is composed of a Dart container and a container for each of the orbits defined in the above enumeration. These containers can be used to store the attributes associated to the cells of each embedded orbit. Containers corresponding to non-embedded orbits will remain unused during the lifetime of the map.
 
@@ -134,7 +134,9 @@ Several map types are defined (one for each dimension). For example, a 2-dimensi
 
 Each map type provides several convenience internal definitions for its cells types. For example a `CMap2` provides the following cell types: `CMap2::Vertex`, `CMap2::Edge`, `CMap2::Face`, `CMap2::Volume`. These cells are actually defined respectively as: `Cell<Orbit::PHI21>`, `Cell<Orbit::PHI2>`, `Cell<Orbit::PHI1>`, `Cell<Orbit::PHI1_PHI2>` which correspond to the orbits of these cells in a 2-dimensional map.
 
-### Attributes
+A `CMap2::Vertex v` contains a Dart and can be thought of as the vertex of `v.dart`. Any other Dart of the same vertex orbit could equally represent the same cell.
+
+## Attributes
 
 Attributes of any type can be added in a map. The `Attribute<T, Orbit>` template class provides a way to access to the type `T` values associated to the `Cell<Orbit>` cells of a map. Here again, convenience definitions are provided in the map types: `CMap2::VertexAttribute<T>`, `CMap2::EdgeAttribute<T>`, etc.
 
@@ -168,16 +170,21 @@ area[f1] = 3.4;
 double sum = area[f1] + area[f2];
 ```
 
-Under the hood, this operator will first get the embedding index of the cell and then access to the value stored at this index in the corresponding Cell attribute container. The embedding index of a cell does not depend on the accessed attribute. As the bracket operator can also be given directly the index of the cell, in the case of accessing to multiple attributes for a same cell, it can be more efficient to first get the embedding index, and then directly use this index to access to the values associated to the cell:
+Under the hood, this operator will first query the embedding index of the given cell and then access to the value stored at this index in the corresponding Cell attribute container. The embedding index of a cell does not depend on the accessed attribute. As the bracket operator can also be given directly the index of the cell, in the case of accessing to multiple attributes for a same cell, it can be more efficient to first get the embedding index, and then directly use this index to access to the different values associated to the cell:
 ```c++
 // given a CMap2::Face f
 uint32 findex = map.embedding(f);
 attr1[findex] = attr2[findex] + attr3[findex];
 ```
 
-### Global traversals
+Attributes can also easily be removed from a map:
+```c++
+map.remove_attribute(attr);
+```
 
-The cells of the map can be traversed using the `foreach_cell` method. This method takes a callable that expects a `Cell<Orbit>` as parameter. The type of this parameter determines the type of the cells that will be traversed by the foreach method. For example, the following call will traverse the vertices of the map and call the given lambda expression on each vertex:
+## Global traversals
+
+The cells of the map can be traversed using the `foreach_cell` method. This method takes a callable that expects a `Cell<Orbit>` as parameter. It is the type of this parameter that determines the type of the cells that will be traversed by the foreach method. For example, the following code will traverse the vertices of the map and call the given lambda expression on each vertex:
 ```c++
 // given a CMap2 map
 map.foreach_cell([&] (CMap2::Vertex v)
@@ -186,9 +193,11 @@ map.foreach_cell([&] (CMap2::Vertex v)
 });
 ```
 
-#### Early stop
+No assumption can be made here about the `Dart` that represents each cell (e.g. `v.dart` in the previous example) when the processing function is called. Any dart of the same orbit could equally represent the same cell.
 
-If one wants to stop the traversal before all the cells have been processed, the provided callable has to return a boolean value. As soon as the callable returns false, the traversal is stopped. In the following example, we are looking up for the first encountered vertex for which the Vec3 position value is on the negative side of the x=0 plan. If after the traversal, the declared Vertex is not valid, it means such a vertex has not been found in the map:
+### Early stop
+
+In order to stop the traversal before all the cells have been processed, the provided callable can return a boolean value. As soon as the callable returns false, the traversal is stopped. In the following example, we are looking for the first encountered vertex for which the Vec3 position value is on the negative side of the x=0 plan. If after the traversal, the declared Vertex is not valid, it means such a vertex has not been found in the map:
 ```c++
 // given a CMap2 map
 // given a CMap2::VertexAttribute<Vec3> position
@@ -208,19 +217,19 @@ if (!looked_up_v.is_valid())
 }
 ```
 
-#### Parallelism
+### Parallelism
 
-CGoGN can take advantage of parallel architectures to speed-up global traversals. A parallel traversal of the cells can be done using the `parallel_foreach_cell` method. The processing of the cells of the map will be spread among a number of threads that depends on the detected underlying hardware concurrency.
+CGoGN can take advantage of parallel architectures to speed-up global traversals. A parallel traversal of the cells can be done using the `parallel_foreach_cell` method. The processing of the cells of the map will be spread among a number of threads that depends on the detected underlying hardware concurrency. In the following example, the displacement value value of each vertex is added to its position:
 ```c++
 // given a CMap2 map
-// given two CMap2::VertexAttribute<Vec3> position, displ
+// given two CMap2::VertexAttribute<Vec3> position, displacement
 map.parallel_foreach_cell([&] (CMap2::Vertex v)
 {
-    position[v] += displ[v];
+    position[v] += displacement[v];
 });
 ```
 
-It is possible to aggregate some results coming from the parallel processing of several threads. In the following example, the average value of an Edge attribute is computed in parallel. Each thread accumulates the values and number of elements corresponding to the fraction of the mesh that it processes, and then the global result is computed:
+It is also possible to aggregate results coming from the parallel processing of several threads. In the following example, the average value of an Edge attribute is computed in parallel. Each thread accumulates the values and number of elements corresponding to the fraction of the mesh that it processes, and then the global result is computed:
 ```c++
 // given a CMap2 map
 // given a CMap2::EdgeAttribute<double> length
@@ -243,10 +252,49 @@ for (uint32 n : nb_per_thread) nb += n;
 double average = sum / double(nb);
 ```
 
-Early stop is not available when doing parallel traversals.
+Note that early stop is not available when doing parallel traversals.
 
-#### Filters
+### Masks
+
+In its simplest form, the `foreach_cell` method processes all the cells of the map. A second parameter, which we call a __Mask__ can be given to the method and alter the way it works.
+
+##### Filtering functions
+
+The most simple Mask takes the form of a callable, that takes as parameter the same type of Cell than the _processing_ callable. This _filtering_ callable returns a boolean value, and for each cell of the map, the _processing_ callable will be called only if the _filtering_ callable evaluated to true.
+
+In the following example, the function will print only the faces for which the area is above a given threshold:
+```c++
+void print_faces(const CMap2& map, const CMap2::FaceAttribute<double>& area, double threshold)
+{
+    map.foreach_cell(
+        [] (CMap2::Face f) { std::cout << f << std::endl; },
+        [&] (CMap2::Face f) -> bool { return area[f] > threshold; }
+    );
+}
+```
+
+Of course, things becomes much more interesting and reusable when the function takes the map and a Mask, and can describe its processing without even knowing how the Mask is altering the traversal:
+```c++
+template <typename MASK>
+void print_faces(const CMap2& map, const MASK& mask)
+{
+    map.foreach_cell(
+        [] (CMap2::Face f) { std::cout << f << std::endl; },
+        mask
+    );
+}
+```
+
+The filtering Mask can then be defined when calling the function, using any local data to do its work:
+```c++
+// given a CMap2 map
+// given a CMap2::FaceAttribute<double> area
+// given a double value threshold
+print_faces(map, [&] (CMap2::Face f) -> bool { return area[f] > threshold; });
+```
+
+##### Cell filters
 
 
 
-#### Traversors
+##### Traversors
