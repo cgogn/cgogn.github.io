@@ -315,9 +315,9 @@ class SelectedCells : public CellFilters
         return selected[CMap2::Vertex(v.dart)] && selected_[CMap2::Vertex(map_.phi2(v.dart))];
     }
 
-    inline cgogn::uint32 filtered_cells() const
+    inline uint32 filtered_cells() const
     {
-        return cgogn::orbit_mask<CMap2::Vertex>() | cgogn::orbit_mask<CMap2::Edge>();
+        return orbit_mask<CMap2::Vertex>() | orbit_mask<CMap2::Edge>();
     }
 
 private:
@@ -339,17 +339,25 @@ void f(const CMap2& map, const MASK& mask)
         mask
     );
     map.foreach_cell(
-        [] (CMap2::Edge v) { /* do something */ },
+        [] (CMap2::Edge e) { /* do something */ },
         mask
     );
 }
 
-SelectedCells(map, selected);
+SelectedCells sc(map, selected);
 f(map, sc);
 ```
 
 As you can see, an additional `filtered_cells` method is defined in the `CellFilters` objects. It used by the `foreach_cell` method to check that the requested cell traversal is actually filtered by the given object and print a warning if it is not.
 
-##### Traversors
+##### Cell traversors
 
-Filtering functions are great to customize the traversals but under the hood, the complete map is still traversed using the classical algorithms.
+Filtering functions are great to customize cell traversals. However, under the hood, the complete map is still traversed using classical algorithms that enumerate the darts and use markers to tag the darts of the processed orbits.
+
+Another type of object, derived from the `CellTraversor` class, can be used as a Mask and given as a second parameter to the `foreach_cell` method. Any `CellTraversor` should provide a `begin<CellType>` and `end<CellType>` template methods that return an internal `const_iterator` type. These methods are then used by the `foreach_cell` method to completely overload the traversal. Several `CellTraversors` are already provided in CGoGN.
+
+__CellCache__
+
+A `CellCache` can store a set of cells for each type of cell. These sets will be directly and efficiently traversed by the `foreach_cell` method. Its main public method is `build<CellType>` which builds the set of the mentionned cell type.
+
+If no argument is given, all the cells of the map will be cached. The build method can take a Mask as an optional argument, which can be any of the valid Masks supported by the `foreach_cell` method, i.e. a filtering function, a `CellFilter` or a `CellTraversor`.
