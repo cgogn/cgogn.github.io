@@ -273,7 +273,7 @@ void print_faces(const CMap2& map, const CMap2::FaceAttribute<double>& area, dou
 }
 ```
 
-Of course, things becomes much more interesting and reusable when the function takes the map and a Mask, and can describe its processing without even knowing how the Mask is altering the traversal:
+Of course, things become much more interesting and reusable when the function takes the map and a Mask, and describes its processing without even knowing how the Mask is altering the traversal:
 ```c++
 template <typename MASK>
 void print_faces(const CMap2& map, const MASK& mask)
@@ -295,6 +295,61 @@ print_faces(map, [&] (CMap2::Face f) -> bool { return area[f] > threshold; });
 
 ##### Cell filters
 
+There are cases where a function has to traverse several types of cells. Passing an additional Mask parameter for each type of cell would not be a very versatile solution. That is why the `foreach_cell` method can also accept an object derived from the `CellFilters` class as its second parameter.
 
+Such an object defines a filtering function for each type of filtered cell. The following example shows a simple filtering object definition. The object is given a map and a boolean vertex attribute. The filtered cells are vertices for which the attribute is true and edges for which the two incident vertices are true:
+```c++
+class SelectedCells : public CellFilters
+{
+    SelectedCells(const CMap2& m, const CMap2::VertexAttribute<bool>& s) :
+        map_(m), selected_(s)
+    {}
+
+    inline bool filter(CMap2::Vertex v) const
+    {
+        return selected_[v];
+    }
+
+    inline bool filter(CMap2::Edge v) const
+    {
+        return selected[CMap2::Vertex(v.dart)] && selected_[CMap2::Vertex(map_.phi2(v.dart))];
+    }
+
+    inline cgogn::uint32 filtered_cells() const
+    {
+        return cgogn::orbit_mask<CMap2::Vertex>() | cgogn::orbit_mask<CMap2::Edge>();
+    }
+
+private:
+    const CMap2& map_;
+    const VertexAttribute<bool>& selected_;
+};
+```
+
+Such a filtering object can then be used like follows:
+```c++
+// given a CMap2 map
+// given a CMap2::VertexAttribute<bool> selected
+
+template <typename MASK>
+void f(const CMap2& map, const MASK& mask)
+{
+    map.foreach_cell(
+        [] (CMap2::Vertex v) { /* do something */ },
+        mask
+    );
+    map.foreach_cell(
+        [] (CMap2::Edge v) { /* do something */ },
+        mask
+    );
+}
+
+SelectedCells(map, selected);
+f(map, sc);
+```
+
+As you can see, an additional `filtered_cells` method is defined in the `CellFilters` objects. It used by the `foreach_cell` method to check that the requested cell traversal is actually filtered by the given object and print a warning if it is not.
 
 ##### Traversors
+
+Filtering functions are great to customize the traversals but under the hood, the complete map is still traversed using the classical algorithms.
