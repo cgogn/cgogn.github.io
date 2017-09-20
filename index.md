@@ -4,13 +4,11 @@ title: Doc
 
 # Foreword
 
-The following documentation starts with an [Introduction](#introduction) to meshes and combinatorial maps, the underlying model used in CGoGN. Depending on your current understanding of this model and on the level on which you plan to use the library, you may or may not need to read it. So feel free to jump directly to the [Implementation](#implementation) part.
+The following documentation starts with an [Introduction](#introduction) to meshes and [Combinatorial maps](#combinatorial-maps), the underlying model used in CGoGN. Depending on your current understanding of this model and on the level on which you plan to use the library, you may or may not need to read it. So feel free to jump directly to the [Implementation](#implementation) part.
 
 # Introduction
 
-A __mesh__ is the cellular decomposition of geometric objects such as curves, surfaces or volumes.
-
-Mesh data structures are of fundamental importance in many fields such as surface modeling, mesh generation, finite element analysis, physical simulation, geometry processing, visualization or computational geometry.
+A __mesh__ is the cellular decomposition of geometric objects such as curves, surfaces or volumes. Mesh data structures are of fundamental importance in many fields such as surface modeling, mesh generation, finite element analysis, physical simulation, geometry processing, visualization or computational geometry.
 
 __Topological models__ provide neighborhood relations between the cells of the decomposition (vertices, edges, faces, volumes). This information is mandatory for many algorithms in the mentioned application fields.
 
@@ -25,9 +23,9 @@ Many existing mesh data structures actually find their roots in the notion of __
 
 # Combinatorial maps
 
-Combinatorial maps are dimension-independent and rely on a single element along with a simple set of relations. All the information about the cells and their incidence and adjacency relations is contained within this simple model. All neighborhood traversals are resolved in optimal time (linear in the number of traversed cells) without having to maintain any additional information.
+Combinatorial maps are __dimension-independent__ and rely on a single element along with a simple set of relations. All the information about the __cells__ and their __incidence__ and __adjacency__ relations is contained within this simple model. All neighborhood queries are resolved in optimal time (linear in the number of traversed cells) without having to maintain any additional information.
 
-As in other topological models, there is a strong separation between the topological structure of the subdivision and the attributes that can be associated to the cells.
+As in other topological models, there is a __strong separation__ between the __topological structure__ of the subdivision and the __attributes__ that can be associated to the cells.
 
 ## From incidence graph to cell-tuples
 
@@ -45,16 +43,16 @@ In a n-dimensional cellular decomposition, a cell-tuple is defined as an ordered
 	<em>Figure 2: Iterative construction of the cell-tuples corresponding to the cellular decomposition of Figure 1</em>
 </p>
 
-Adjacency relations are defined on the cell-tuples: two cell-tuples are said to be i-adjacent if their path in the incidence graph share all but the i-dimensional cell. For example, (F1, E2, V1) and (F1, E2, V2) are 0-adjacent. In the context of the cellular decomposition of a quasi-manifold, it has been shown that these n+1 adjacency relations put the cell-tuples in a one-to-one relation (except for the n-adjacency at the boundary of the object where cell-tuples do not have any mate). Based on these definitions, generalized-maps (or G-maps) have been proposed as a model for the representation of the cellular decomposition of n-dimensional quasi-manifolds.
+Adjacency relations are defined on the cell-tuples: two cell-tuples are said to be i-adjacent if their path in the incidence graph share all but the i-dimensional cell. For example, (F1, E2, V1) and (F1, E2, V2) are 0-adjacent. In the context of the cellular decomposition of a quasi-manifold, it can be shown that these n+1 adjacency relations put the cell-tuples in a one-to-one relation (except for the n-adjacency at the boundary of the object where cell-tuples do not have any mate). Based on these definitions, generalized maps (or G-maps) have been proposed as a model for the representation of the cellular decomposition of n-dimensional quasi-manifolds.
 
 ## Generalized maps
 
-Generalized maps encode a cellular decomposition with a set D of abstract elements called darts that are in one-to-one correspondance with the cell-tuples. A set of n+1 functions αi : D → D, 0 ≤ i ≤ n are defined based on the i-adjacency relations of the cell-tuples. Figure 3 shows the G-map corresponding to the cellular decomposition of previous example. Following the previously mentioned properties of i-adjacencies on cell-tuples, αi functions are involutions, i.e. functions such that ∀d ∈ D, αi(αi(d)) = d.
+Generalized maps encode a cellular decomposition with a set D of abstract elements called darts that are in one-to-one correspondance with the cell-tuples. A set of n+1 functions αi : D → D, 0 ≤ i ≤ n are defined based on the i-adjacency relations of the cell-tuples. Figure 3 shows the G-map corresponding to the cellular decomposition of the previous example. Following the previously mentioned properties of i-adjacencies on cell-tuples, αi functions are involutions, i.e. functions such that ∀d ∈ D, αi(αi(d)) = d.
 
 Combinatorial constraints express the correct assembly of cells along their boundary. For αi functions, these constraints are expressed as follows: ∀i, j, 0 ≤ i < i + 2 ≤ j ≤ n, αi ◦ αj is an involution. If the G-map is constructed from the incidence graph of the decomposition of a quasi-manifold – a set of d-cells glued along (d-1)-cells – then those constraints are automatically satisfied.
 
 The original cells are thus decomposed with their incidence relations into a dimension-independent set of a unique abstract entity. In order to bring back the notion of cell, the following two observations are a good starting point:
- - each dart identifies a set of n cells of different dimension, i.e. those contained in the corresponding cell-tuple
+ - each dart identifies a set of n cells of each dimension, i.e. those contained in the corresponding cell-tuple
  - each k-cell is represented by a set of darts, i.e. all the darts whose corresponding cell-tuple contains this cell
 
 Figure 3 illustrates these notions. Starting from the same dart d, depending on how it is interpreted, one can build the set of darts that represent its vertex, edge or face. Within each of these sets, any dart equally represents the corresponding vertex, edge or face.
@@ -256,7 +254,7 @@ Note that early stop is not available when doing parallel traversals.
 
 ### Masks
 
-In its simplest form, the `foreach_cell` method processes all the cells of the map. A second parameter, which we call a __Mask__ can be given to the method and alter the way it works.
+In their simplest form, the `foreach_cell` and the `parallel_foreach_cell` methods process all the cells of the map. A second parameter, which we call a __Mask__ can be given to these methods and alter the way they work.
 
 ##### Filtering functions
 
@@ -285,7 +283,7 @@ void print_faces(const CMap2& map, const MASK& mask)
 }
 ```
 
-The filtering Mask can then be defined when calling the function, using any local data to do its work:
+The filtering Mask can then be defined on-the-fly when calling the function, using any local data to do its work:
 ```c++
 // given a CMap2 map
 // given a CMap2::FaceAttribute<double> area
@@ -295,12 +293,13 @@ print_faces(map, [&] (CMap2::Face f) -> bool { return area[f] > threshold; });
 
 ##### Cell filters
 
-There are cases where a function has to traverse several types of cells. Passing an additional Mask parameter for each type of cell would not be a very versatile solution. That is why the `foreach_cell` method can also accept an object derived from the `CellFilters` class as its second parameter.
+There are cases in which a function has to traverse several types of cells. Passing an additional Mask parameter for each type of cell would not be a very versatile solution. That is why the `foreach_cell` and `parallel_foreach_cell` methods can also accept an object derived from the `CellFilters` class as their second parameter.
 
-Such an object defines a filtering function for each type of filtered cell. The following example shows a simple filtering object definition. The object is given a map and a boolean vertex attribute. The filtered cells are vertices for which the attribute is true and edges for which the two incident vertices are true:
+Such an object defines a filtering function for each type of filtered cell. The following example shows a simple filtering object definition. The object is constructed given a map and a boolean vertex attribute. The filtered cells are here vertices for which the attribute is true and edges for which the attribute is true for its two incident vertices:
 ```c++
 class SelectedCells : public CellFilters
 {
+public:
     SelectedCells(const CMap2& m, const CMap2::VertexAttribute<bool>& s) :
         map_(m), selected_(s)
     {}
@@ -334,11 +333,11 @@ Such a filtering object can then be used like follows:
 template <typename MASK>
 void f(const CMap2& map, const MASK& mask)
 {
-    map.foreach_cell(
+    map.parallel_foreach_cell(
         [] (CMap2::Vertex v) { /* do something */ },
         mask
     );
-    map.foreach_cell(
+    map.parallel_foreach_cell(
         [] (CMap2::Edge e) { /* do something */ },
         mask
     );
@@ -348,16 +347,82 @@ SelectedCells sc(map, selected);
 f(map, sc);
 ```
 
-As you can see, an additional `filtered_cells` method is defined in the `CellFilters` objects. It used by the `foreach_cell` method to check that the requested cell traversal is actually filtered by the given object and print a warning if it is not.
+As you can see, an additional `filtered_cells` method is defined in the `CellFilters` objects. It is used by the `foreach_cell` or `parallel_foreach_cell` method to check that the requested cell traversal is actually filtered by the given object. If it is not the case, a warning is printed.
 
 ##### Cell traversors
 
-Filtering functions are great to customize cell traversals. However, under the hood, the complete map is still traversed using classical algorithms that enumerate the darts and use markers to tag the darts of the processed orbits.
+Filtering functions are a great and versatile way to customize cell traversals. They are particularly well adapted to highly variable settings where the set of filtered cells changes regularly w.r.t. the filtering function. However, under the hood, the complete map is still traversed using classical algorithms that enumerate the darts and use markers (a boolean attribute) to tag the darts of the processed orbits.
 
-Another type of object, derived from the `CellTraversor` class, can be used as a Mask and given as a second parameter to the `foreach_cell` method. Any `CellTraversor` should provide a `begin<CellType>` and `end<CellType>` template methods that return an internal `const_iterator` type. These methods are then used by the `foreach_cell` method to completely overload the traversal. Several `CellTraversors` are already provided in CGoGN.
+Other types of objects, derived from the `CellTraversor` class, can be used as a Mask and given as a second parameter to the `foreach_cell` or `parallel_foreach_cell` method. Any `CellTraversor` should provide a `begin<CellType>` and `end<CellType>` template methods that return an internal `const_iterator` type instance. These methods are then used by the `foreach_cell` or `parallel_foreach_cell` method to completely overload the classical traversal. Several `CellTraversors` are already provided in CGoGN.
+
+__QuickTraversor__
+
+The goal of a `QuickTraversor` is to avoid the traversal of the darts and the marking/unmarking cost related to the usage of a marker. To this aim, it creates an Attribute of type Dart in the attribute container of the traversed cell type. Calling the `build<CellType>` method will fill this attribute with one representing dart per cell. When the `QuickTraversor` is given to the `foreach_cell` or `parallel_foreach_cell` method, its internal attribute is used to directly enumerate the cells without having to manage any marker, providing a significative speed-up.
+
+However,  in order to keep the `QuickTraversor` in sync with the map, special care must be taken when the connectivity is modified:
+ - when a new orbit is created, one of its darts has to be written in the internal attribute. This can be done by passing the new cell to the `update` method.
+ - when an existing orbit is modified, if one or more darts have been removed, the representing dart stored in the internal attribute may have been removed. A valid dart can be chosen again by passing the cell to the `update` method.
+ - when an orbit is completely deleted, nothing has to be done as the attributes of this cell will not be traversed anymore.
+
+In the following example, a `QuickTraversor` is built for the vertices of the map. Then an edge is cut, inserting a new vertex, for which the `QuickTraversor` is updated:
+```c++
+// given a CMap2 map
+CMap2::QuickTraversor qtrav(map);
+qtrav.build<CMap2::Vertex>();
+map.foreach_cell(
+    [&] (CMap2::Vertex v) { /* do something with v */ },
+    qtrav
+);
+// given a CMap2::Edge e
+CMap2::Vertex v = map.cut_edge(e);
+qtrav.update(v);
+```
+
+The selection of the dart that represents each cell can be customized by giving an additional function as a last parameter to the `build` and `update` methods. This function should take a Cell and return a Dart. This customization is a great way to be able to make assumptions about the dart that represents each cell when it is given to the processing function during a traversal.
+
+__FilteredQuickTraversor__
+
+A `FilteredQuickTraversor` is a variation of a `QuickTraversor` in which a filtering function is given to the `build` function. The internal attribute is still filled with one dart per cell and the same updates have to be done in order to keep it in sync with the map. The difference is that the provided filter will be evaluated dynamically each time the `FilteredQuickTraversor` is used for the traversal of the cells.
+
+The dart selection feature is also available by giving a function as a last parameter to the `build` and `update` methods.
 
 __CellCache__
 
-A `CellCache` can store a set of cells for each type of cell. These sets will be directly and efficiently traversed by the `foreach_cell` method. Its main public method is `build<CellType>` which builds the set of the mentionned cell type.
+With the previous Masks, even when using a filtering function, all the cells of the map are always traversed and the filtering function is evaluated dynamically on each cell in order to decide to call the processing function on it or not. This can be great in a dynamic environment where the set of filtered cells changes regularly. But if the set of filtered cells is stable, and moreover if this set is small w.r.t. the number of cells of the map, a more efficient solution can be proposed.
 
-If no argument is given, all the cells of the map will be cached. The build method can take a Mask as an optional argument, which can be any of the valid Masks supported by the `foreach_cell` method, i.e. a filtering function, a `CellFilter` or a `CellTraversor`.
+A `CellCache` can store a set of cells for each type of cell. These sets will be directly traversed by the `foreach_cell` or `parallel_foreach_cell` method. Its main public method is `build<CellType>` which builds the set of the mentioned cell type.
+
+If no argument is given, all the cells of the map will be put into the cache. However, the build method can also take a Mask as an optional argument to restrict the cached cells to the ones that are visible with the given Mask. Any kind of supported Mask, i.e. a filtering function, a `CellFilter` or a `CellTraversor` (but not the one we are trying to build) can be used.
+
+In the following example, all the degree 5 vertices are put into a cache which is then used in a traversal that is efficient and restricted to those vertices:
+```c++
+// given a CMap2 map
+CMap2::CellCache cache(map);
+cache.build<CMap2::Vertex>([&] (CMap2::Vertex v)
+{
+    return map.degree(v) == 5;
+});
+map.foreach_cell(
+    [&] (CMap2::Vertex v) { /* do something with v */ },
+    cache
+);
+```
+
+Note that if a new degree 5 vertex is inserted into the map, it will not be part of a cache that has been built before.
+
+Note also that if any cell stored in the cache is deleted from the map, the cache is invalid and any subsequent traversal with this `CellCache` will fail.
+
+A common usage of `CellCache` is with algorithms that insert new cells into the traversed map. Indeed, without such a mechanism, the newly inserted cells would be traversed resulting in a possible infinite loop. In the following example, all existing edges of the map are cut by inserting a new vertex:
+```c++
+// given a CMap2 map
+CMap2::CellCache cache(map);
+cache.build<CMap2::Edge>();
+map.foreach_cell([&] (CMap2::Edge e) { map.cut_edge(e); }, cache );
+``` 
+
+## Local traversals
+
+
+
+## Operators
+

@@ -36,11 +36,13 @@
 	font-weight: bold;
 }
 #side_menu ul ul {
-	list-style: none;
 	padding-right: 20px;
 	font-size: 0.9em;
 	margin-bottom: 0;
 	font-weight: normal;
+}
+#side_menu ul ul ul {
+	font-style: italic;
 }
 
 img {
