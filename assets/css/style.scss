@@ -45,6 +45,13 @@
 	font-style: italic;
 }
 
+p.warning {
+	padding: 15px;
+	font-style: italic;
+	color: rgb(255, 75, 75);
+	background-color: rgb(255, 240, 250);
+}
+
 img {
 	max-width: 500px;
 }

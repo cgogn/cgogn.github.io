@@ -250,7 +250,7 @@ for (uint32 n : nb_per_thread) nb += n;
 double average = sum / double(nb);
 ```
 
-Note that early stop is not available when doing parallel traversals.
+<p class="warning"> Note that early stop is not available when doing parallel traversals. </p>
 
 ### Masks
 
@@ -258,7 +258,7 @@ In their simplest form, the `foreach_cell` and the `parallel_foreach_cell` metho
 
 ##### Filtering functions
 
-The most simple Mask takes the form of a callable, that takes as parameter the same type of Cell than the _processing_ callable. This _filtering_ callable returns a boolean value, and for each cell of the map, the _processing_ callable will be called only if the _filtering_ callable evaluated to true.
+The most simple Mask takes the form of a callable, that takes as parameter the same type of Cell than the _processing_ callable. This _filtering_ callable returns a boolean value, and for each cell of the map, the _processing_ callable will only be called if the _filtering_ callable evaluated to true.
 
 In the following example, the function will print only the faces for which the area is above a given threshold:
 ```c++
@@ -271,7 +271,7 @@ void print_faces(const CMap2& map, const CMap2::FaceAttribute<double>& area, dou
 }
 ```
 
-Of course, things become much more interesting and reusable when the function takes the map and a Mask, and describes its processing without even knowing how the Mask is altering the traversal:
+Of course, things become much more interesting and reusable when the function takes the map and a Mask as parameters, and can focus on what it does without even knowing how the given Mask is altering the traversal:
 ```c++
 template <typename MASK>
 void print_faces(const CMap2& map, const MASK& mask)
@@ -283,7 +283,7 @@ void print_faces(const CMap2& map, const MASK& mask)
 }
 ```
 
-The filtering Mask can then be defined on-the-fly when calling the function, using any local data to do its work:
+The filtering Mask can then be defined directly when calling the function, using any local data to do its work:
 ```c++
 // given a CMap2 map
 // given a CMap2::FaceAttribute<double> area
@@ -334,11 +334,11 @@ template <typename MASK>
 void f(const CMap2& map, const MASK& mask)
 {
     map.parallel_foreach_cell(
-        [] (CMap2::Vertex v) { /* do something */ },
+        [] (CMap2::Vertex v) { /* do something with v */ },
         mask
     );
     map.parallel_foreach_cell(
-        [] (CMap2::Edge e) { /* do something */ },
+        [] (CMap2::Edge e) { /* do something with e */ },
         mask
     );
 }
@@ -351,20 +351,20 @@ As you can see, an additional `filtered_cells` method is defined in the `CellFil
 
 ##### Cell traversors
 
-Filtering functions are a great and versatile way to customize cell traversals. They are particularly well adapted to highly variable settings where the set of filtered cells changes regularly w.r.t. the filtering function. However, under the hood, the complete map is still traversed using classical algorithms that enumerate the darts and use markers (a boolean attribute) to tag the darts of the processed orbits.
+Filtering functions are a great and versatile way to customize cell traversals. They are particularly well adapted to highly variable settings where the set of filtered cells changes regularly w.r.t. the filtering function. However, under the hood, the complete map is still traversed using classical algorithms that enumerate all the darts and use markers (a boolean attribute) to tag the darts of the processed orbits.
 
 Other types of objects, derived from the `CellTraversor` class, can be used as a Mask and given as a second parameter to the `foreach_cell` or `parallel_foreach_cell` method. Any `CellTraversor` should provide a `begin<CellType>` and `end<CellType>` template methods that return an internal `const_iterator` type instance. These methods are then used by the `foreach_cell` or `parallel_foreach_cell` method to completely overload the classical traversal. Several `CellTraversors` are already provided in CGoGN.
 
 __QuickTraversor__
 
-The goal of a `QuickTraversor` is to avoid the traversal of the darts and the marking/unmarking cost related to the usage of a marker. To this aim, it creates an Attribute of type Dart in the attribute container of the traversed cell type. Calling the `build<CellType>` method will fill this attribute with one representing dart per cell. When the `QuickTraversor` is given to the `foreach_cell` or `parallel_foreach_cell` method, its internal attribute is used to directly enumerate the cells without having to manage any marker, providing a significative speed-up.
+The goal of a `QuickTraversor` is to avoid the enumeration of all the darts and the marking/unmarking cost related to the usage of a marker. To achieve this, it creates and maintains an Attribute of type Dart in the attribute container of the traversed cell type. Calling the `build<CellType>` method will fill this attribute with one representing dart per cell. When the `QuickTraversor` is given to the `foreach_cell` or `parallel_foreach_cell` method, its internal attribute is used to directly enumerate the cells without having to manage any marker, providing a significative speed-up.
 
-However,  in order to keep the `QuickTraversor` in sync with the map, special care must be taken when the connectivity is modified:
+However, in order to keep the `QuickTraversor` in sync with the map, special care must be taken when the connectivity is modified:
  - when a new orbit is created, one of its darts has to be written in the internal attribute. This can be done by passing the new cell to the `update` method.
  - when an existing orbit is modified, if one or more darts have been removed, the representing dart stored in the internal attribute may have been removed. A valid dart can be chosen again by passing the cell to the `update` method.
  - when an orbit is completely deleted, nothing has to be done as the attributes of this cell will not be traversed anymore.
 
-In the following example, a `QuickTraversor` is built for the vertices of the map. Then an edge is cut, inserting a new vertex, for which the `QuickTraversor` is updated:
+In the following example, a `QuickTraversor` is built for the vertices of the map. Then an edge is cut, inserting a new vertex. In order for this new vertex to have a valid representing dart in the `QuickTraversor` internal attribute, this new vertex is updated:
 ```c++
 // given a CMap2 map
 CMap2::QuickTraversor qtrav(map);
@@ -378,17 +378,17 @@ CMap2::Vertex v = map.cut_edge(e);
 qtrav.update(v);
 ```
 
-The selection of the dart that represents each cell can be customized by giving an additional function as a last parameter to the `build` and `update` methods. This function should take a Cell and return a Dart. This customization is a great way to be able to make assumptions about the dart that represents each cell when it is given to the processing function during a traversal.
+The selection of the dart that represents each cell can be customized by giving an additional function as parameter to the `build` and `update` methods. This function should take a Cell as parameter and return a Dart. This customization is useful if you want to be able to make assumptions about the dart that represents each cell when it is given to the processing function during a traversal.
 
 __FilteredQuickTraversor__
 
-A `FilteredQuickTraversor` is a variation of a `QuickTraversor` in which a filtering function is given to the `build` function. The internal attribute is still filled with one dart per cell and the same updates have to be done in order to keep it in sync with the map. The difference is that the provided filter will be evaluated dynamically each time the `FilteredQuickTraversor` is used for the traversal of the cells.
+A `FilteredQuickTraversor` is a variation of a `QuickTraversor`. In this modified version, the internal attribute is still filled with one dart per cell when calling the `build` method and the same updates have to be done in order to keep it in sync with the map. The difference is a new `set_filter<CellType>` method that provides a filter which is evaluated on-the-fly each time the `FilteredQuickTraversor` is used for the traversal of the cells. It can be seen as a combination of the efficiency of the traversal without marking and the versatility of the on-the-fly cells filtering.
 
-The dart selection feature is also available by giving a function as a last parameter to the `build` and `update` methods.
+The dart selection customization is also available by giving a dart selection function as an additional parameter to the `build` and `update` methods.
 
 __CellCache__
 
-With the previous Masks, even when using a filtering function, all the cells of the map are always traversed and the filtering function is evaluated dynamically on each cell in order to decide to call the processing function on it or not. This can be great in a dynamic environment where the set of filtered cells changes regularly. But if the set of filtered cells is stable, and moreover if this set is small w.r.t. the number of cells of the map, a more efficient solution can be proposed.
+With the previous Masks, even when using a filtering function, all the cells of the map are always traversed and the filtering function is evaluated on-the-fly for each cell in order to decide if the processing function should be called on it or not. This can be great in a dynamic environment where the set of filtered cells changes regularly. But if the set of filtered cells is stable, and moreover if this set is small w.r.t. the number of cells of the map, a more efficient solution can be proposed.
 
 A `CellCache` can store a set of cells for each type of cell. These sets will be directly traversed by the `foreach_cell` or `parallel_foreach_cell` method. Its main public method is `build<CellType>` which builds the set of the mentioned cell type.
 
@@ -408,11 +408,11 @@ map.foreach_cell(
 );
 ```
 
-Note that if a new degree 5 vertex is inserted into the map, it will not be part of a cache that has been built before.
+<p class="warning"> Note that if a new degree 5 vertex is inserted into the map, it will not be part of a cache that has been built before. </p>
 
-Note also that if any cell stored in the cache is deleted from the map, the cache is invalid and any subsequent traversal with this `CellCache` will fail.
+<p class="warning"> Note also that if any cell stored in the cache is deleted from the map, the cache is invalid and any subsequent traversal with this `CellCache` will fail. </p>
 
-A common usage of `CellCache` is with algorithms that insert new cells into the traversed map. Indeed, without such a mechanism, the newly inserted cells would be traversed resulting in a possible infinite loop. In the following example, all existing edges of the map are cut by inserting a new vertex:
+The "snapshot" property of the `CellCache` can be particularly exploited within algorithms that insert new cells during the traversal of the map. Indeed, without such a mechanism, the newly inserted cells could also be traversed resulting in a possible infinite loop. In the following example, all the edges of the map are cut by inserting a new vertex. Only the edges that existed at the moment the cache was built are considered:
 ```c++
 // given a CMap2 map
 CMap2::CellCache cache(map);
