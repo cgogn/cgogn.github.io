@@ -408,9 +408,9 @@ map.foreach_cell(
 );
 ```
 
-<p class="warning"> Note that if a new degree 5 vertex is inserted into the map, it will not be part of a cache that has been built before. </p>
+<p class="warning"> Note that if a new cell that satisifies the filter is inserted into the map, it will not be part of a cache that has already been built. </p>
 
-<p class="warning"> Note also that if any cell stored in the cache is deleted from the map, the cache is invalid and any subsequent traversal with this `CellCache` will fail. </p>
+<p class="warning"> Note also that if any cell stored in the cache is deleted from the map, the cache is invalid and any subsequent traversal with this cache will fail. </p>
 
 The "snapshot" property of the `CellCache` can be particularly exploited within algorithms that insert new cells during the traversal of the map. Indeed, without such a mechanism, the newly inserted cells could also be traversed resulting in a possible infinite loop. In the following example, all the edges of the map are cut by inserting a new vertex. Only the edges that existed at the moment the cache was built are considered:
 ```c++
@@ -422,7 +422,79 @@ map.foreach_cell([&] (CMap2::Edge e) { map.cut_edge(e); }, cache );
 
 ## Local traversals
 
+All the __incidence__ and __adjacency__ relations between cells are encoded within a combinatorial map. We first give an intuitive definition of what we mean by incidence and adjacency relations.
 
+Let C1 and C2 be two cells of different dimensions with dim(C1) > dim(C2). C2 is said to be _incident_ to C1 if it belongs to the sub-tree under C1 in the incidence graph (for example, the four vertices and the four edges that bound a quad face in a 2D mesh are said to be incident to this face). C1 is said to be _incident_ to C2 if it is part of the ancestors of C2 in the incidence graph (for example, the six edges and the six faces around a vertex in a regular 2D triangle mesh are said to be incident to this vertex).
+
+Two cells of equal dimension C1 and C2 are said to be _adjacent_ if they share a common incident cell. For example: two vertices are said to be _adjacent through an edge_ if they are both incident to a same edge; two faces are said to be _adjacent through a vertex_ if they are both incident to a same vertex.
+
+CGoGN provides methods to traverse all these local neighborhoods. These methods all work in the same way: the callable given as second parameter is called on all the requested incident or adjacent cells of the cell given as first parameter.
+
+In a 2-dimensional map, the local neighborhood traversal functions are the following:
+ - `foreach_incident_edge(CMap2::Vertex, f)`
+ - `foreach_incident_face(CMap2::Vertex, f)`
+ - `foreach_adjacent_vertex_through_edge(CMap2::Vertex, f)`
+ - `foreach_adjacent_vertex_through_face(CMap2::Vertex, f)`
+ - `foreach_incident_vertex(CMap2::Edge, f)`
+ - `foreach_incident_face(CMap2::Edge, f)`
+ - `foreach_adjacent_edge_through_vertex(CMap2::Edge, f)`
+ - `foreach_adjacent_edge_through_face(CMap2::Edge, f)`
+ - `foreach_incident_vertex(CMap2::Face, f)`
+ - `foreach_incident_edge(CMap2::Face, f)`
+ - `foreach_adjacent_face_through_vertex(CMap2::Face, f)`
+ - `foreach_adjacent_face_through_edge(CMap2::Face, f)`
+ - `foreach_incident_vertex(CMap2::Volume, f)`
+ - `foreach_incident_edge(CMap2::Volume, f)`
+ - `foreach_incident_face(CMap2::Volume, f)`
+
+<p align="center">
+	<img alt="local traversals" src="/assets/img/traversor2XXaY.png">
+	<em>Figure 6: adjacent cells traversals in a 2-dimensional map</em>
+</p>
+
+The following example illustrates a function that computes the average of vertex attribute values over the vertices incident to a face in a 2-dimensional map:
+```c++
+template <typename T>
+T average(const CMap2& map, CMap2::Face f, const CMap2::VertexAttribute<T>& attribute)
+{
+    T result(0);
+    uint32 nbv = 0;
+    map.foreach_incident_vertex(f, [&] (CMap2::Vertex v)
+    {
+        result += attribute[v];
+        ++nbv;
+    });
+    return result / nbv;
+}
+```
+
+Given that all the equivalent neighborhood traversal functions are also defined in 3-dimensional maps, the previous function can be easily generalized to the computation of the average of vertex attribute values over the vertices incident to a n-cell in a n-dimensional map:
+```c++
+template <typename T, typename CellType, typename MAP>
+T average(const MAP& map, CellType c, const typename MAP::template VertexAttribute<T>& attribute)
+{
+    T result(0);
+    uint32 nbv = 0;
+    map.foreach_incident_vertex(c, [&] (typename MAP::Vertex v)
+    {
+        result += attribute[v];
+        ++nbv;
+    });
+    return result / nbv;
+}
+```
+
+## Properties
+
+Several methods can provide some properties about the map or the cells.
+
+ - nb_cells
+ - nb_boundaries
+ - same_cell
+ - degree
+ - codegree
+ - is_incident_to_boundary
+ - is_adjacent_to_boundary
 
 ## Operators
 
