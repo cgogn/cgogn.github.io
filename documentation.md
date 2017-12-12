@@ -381,7 +381,7 @@ T average(const CMap2& map, CMap2::Face f, const CMap2::VertexAttribute<T>& attr
 }
 ```
 
-Given that all the equivalent neighborhood traversal functions are also defined in 3-dimensional maps, and that the incident vertices can be traversed for any cell of dimension greater than 0, the previous function can be easily generalized to the computation of the average of vertex attribute values over the vertices incident to a n-cell in a n-dimensional map:
+Given that all the equivalent neighborhood traversal functions are also defined in 3-dimensional maps, and that the incident vertices can be traversed for any cell of dimension k > 0, the previous function can be easily generalized to the computation of the average of vertex attribute values over the vertices incident to a k-cell in a n-dimensional map:
 ```c++
 template <typename T, typename CellType, typename MAP>
 T average(const MAP& map, CellType c, const typename MAP::template VertexAttribute<T>& attribute)
