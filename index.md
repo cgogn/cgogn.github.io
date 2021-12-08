@@ -2,6 +2,8 @@
 title: CGoGN Home
 id: home
 ---
+CGoGN is develop by the research team [IGG](https://igg.icube.unistra.fr/index.php/Accueil) of the [ICube](https://icube.unistra.fr/) Laboratory of the University of Strasbourg
+It is now part of a most generic platform name [GAIA](https://gaia.icube.unistra.fr/index.php/Accueil)  (in a pole name Modelling & Simulation) which aim to treat most generic type of data, from analysis until Visualisation.
 
 CGoGN is a geometric modeling C++ library that provides an efficient implementation of combinatorial maps.
 
