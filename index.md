@@ -130,24 +130,44 @@ A combinatorial map is composed of a Dart container and a container for each of 
 
 Several map types are defined (one for each dimension). For example, a 2-dimensional combinatorial map can be declared like that: `CMap2 map;`.
 
-Each map type provides several convenience internal definitions for its cells types. For example a `CMap2` provides the following cell types: `CMap2::Vertex`, `CMap2::Edge`, `CMap2::Face`, `CMap2::Volume`. These cells are actually defined respectively as: `Cell<Orbit::PHI21>`, `Cell<Orbit::PHI2>`, `Cell<Orbit::PHI1>`, `Cell<Orbit::PHI1_PHI2>` which correspond to the orbits of these cells in a 2-dimensional map.
+Each map type provides several convenience internal definitions for its cells types. For example a `CMap2` provides the following cell types: `Vertex`, `Edge`, `Face`, `Volume`. These cells are actually defined respectively as: `Cell<Orbit::PHI21>`, `Cell<Orbit::PHI2>`, `Cell<Orbit::PHI1>`, `Cell<Orbit::PHI1_PHI2>` which correspond to the orbits of these cells in a 2-dimensional map.
 
-A `CMap2::Vertex v` contains a Dart and can be thought of as the vertex of `v.dart`. Any other Dart of the same vertex orbit could equally represent the same cell.
+A `Vertex v` contains a Dart and can be thought of as the vertex of `v.dart`. Any other Dart of the same vertex orbit could equally represent the same cell.
+
+## Mesh abstraction
+
+In a goal of genericity, all informations about a map class are obtain through a traits class `cgogn::mesh_traits<Mesh>`. Instead of using directly Maps class, all our code will use a t emplate type parameter Mesh. A mesh can of course be a Map but also a object that represent a part of a map (CellFilter, CellCache as explained later,), but also any type thath furnish all necessary constants, types and functions definitions. 
+
+The introduced complexiy could totally disappear from your code just by adding some type definitions.  For example :
+
+```c++
+template <typename Mesh>
+void my_algo(const Mesh& m)
+{
+	using Vertex = typename mesh_traits<Mesh>::Vertex;
+	using Face = typename mesh_traits<Mesh>::Face;
+	template <typename T>
+	using Attribute = typename mesh_traits<Mesh>::Attribute<T>;
+```
+
+Example of following section will use these type definitions.
 
 ## Attributes
 
-Attributes of any type can be added in a map. The `Attribute<T, Orbit>` template class provides a way to access to the type `T` values associated to the `Cell<Orbit>` cells of a map. Here again, convenience definitions are provided in the map types: `CMap2::VertexAttribute<T>`, `CMap2::EdgeAttribute<T>`, etc.
+Attributes of any type can be added in a map. The `mesh_traits<Mesh>::Attribute<T>` template class provides a way to access to the type `T` values associated to the  cells of a map.
+Some functions allow provided `add_attribute<T,CELL>(mesh,att_name)`, `get_attribute<T,CELL>(mesh,att_name)`, `remove_attribute<T,CELL>(mesh,att)`.
+Functions to add and get return a `std::shared_prt<mesh_traits<Mesh>::Attribute<T>>`, we encourage you to use the `auto` C++ keyword for local declaration.
 
-For example, a Vertex attribute storing an integer value on each vertex can be added in a 2-dimensional map like that:
+For example, a Vertex attribute storing an integer value on each vertex can be added in a Mesh (that could be a CMap2) type like that (using previous type definitions):
 ```c++
-CMap2 map;
-CMap2::VertexAttribute<uint32> attr = map.add_attribute<uint32, CMap2::Vertex>("attr");
+Mesh m;
+auto attr = add_attribute<uint32, Vertex>(m, "attr");
 ```
 
-An existing attribute can also be obtained by its name. As the requested attribute may not exist in the map, the validity of the obtained object can then be verified:
+An existing attribute can also be obtained by its name. As the requested attribute may not exist in the map, the validity of the attribute can then be verified:
 ```c++
-CMap2::FaceAttribute<double> area = map.get_attribute<double, CMap2::Face>("area");
-if (!area.is_valid())
+auto area = get_attribute<double, Face>(m, "area");
+if (area == nullptr)
 {
     // there were no Face attribute of this type having this name in the map
 }
@@ -155,37 +175,36 @@ if (!area.is_valid())
 
 Attribute values can be traversed globally using the range-based for loop syntax:
 ```c++
-for (const T& v : attr)
+for (const T& v : *attr)
 {
     // do something with v
 }
 ```
 
-Given a cell of the map, the value associated to this cell for an attribute can be directly accessed using the bracket operator:
+Given a cell of the map, the value associated to this cell for an attribute can be accessed using the value fonction:
 ```c++
-// given two CMap2::Face f1, f2
-area[f1] = 3.4;
-double sum = area[f1] + area[f2];
+//given to Face f1, f2
+value<double>(m,attr,f1) = 3.4;
+double sum = value<double>(m,attr,f1) + value<double>(m,attr,f2);
 ```
 
-Under the hood, this operator will first query the embedding index of the given cell and then access to the value stored at this index in the corresponding Cell attribute container. The embedding index of a cell does not depend on the accessed attribute. As the bracket operator can also be given directly the index of the cell, in the case of accessing to multiple attributes for a same cell, it can be more efficient to first get the embedding index, and then directly use this index to access to the different values associated to the cell:
+Under the hood, this operator will first query the embedding index of the given cell and then access to the value stored at this index in the corresponding Cell attribute container. The embedding index of a cell does not depend on the accessed attribute. :
 ```c++
-// given a CMap2::Face f
-uint32 findex = map.embedding(f);
-attr1[findex] = attr2[findex] + attr3[findex];
+// given a Face f
+uint32 findex = index_of(m,f);
+(*attr1)[findex] = (*attr2)[findex] + (*attr3)[findex];
 ```
 
-Attributes can also easily be removed from a map:
+Attributes can also easily be removed:
 ```c++
-map.remove_attribute(attr);
+remove_attribute(m,attr);
 ```
 
 ## Global traversals
 
-The cells of the map can be traversed using the `foreach_cell` method. This method takes a callable that expects a `Cell<Orbit>` as parameter. It is the type of this parameter that determines the type of the cells that will be traversed by the foreach method. For example, the following code will traverse the vertices of the map and call the given lambda expression on each vertex:
+The cells of the map can be traversed using the `foreach_cell` method. This method takes a callable that expects a `Cell<Orbit>` as parameter. It is the type of this parameter that determines the type of the cells that will be traversed by the foreach method. For example, the following code will traverse the vertices of the mesh m and call the given lambda expression on each vertex (we always use type definitions as shown in *Mesh abstraction*):
 ```c++
-// given a CMap2 map
-map.foreach_cell([&] (CMap2::Vertex v)
+foreach_cell( m, [&] (Vertex v)
 {
     // do something with v
 });
@@ -197,12 +216,12 @@ No assumption can be made here about the `Dart` that represents each cell (e.g. 
 
 In order to stop the traversal before all the cells have been processed, the provided callable can return a boolean value. As soon as the callable returns false, the traversal is stopped. In the following example, we are looking for the first encountered vertex for which the Vec3 position value is on the negative side of the x=0 plan. If after the traversal, the declared Vertex is not valid, it means such a vertex has not been found in the map:
 ```c++
-// given a CMap2 map
-// given a CMap2::VertexAttribute<Vec3> position
-CMap2::Vertex looked_up_v;
-map.foreach_cell([&] (CMap2::Vertex v) -> bool
+// given a mesh m
+// given a Vertex looked_up_vertex ()
+Vertex looked_up_v;
+foreach_cell([&] (m, Vertex v) -> bool
 {
-    if (position[v][0] < 0.0)
+    if (value<Vec3>(m,position,v)[0] < 0.0)
     {
         looked_up_v = v;
         return false;
@@ -217,25 +236,25 @@ if (!looked_up_v.is_valid())
 
 ### Parallelism
 
-CGoGN can take advantage of parallel architectures to speed-up global traversals. A parallel traversal of the cells can be done using the `parallel_foreach_cell` method. The processing of the cells of the map will be spread among a number of threads that depends on the detected underlying hardware concurrency. In the following example, the displacement value value of each vertex is added to its position:
+CGoGN can take advantage of parallel architectures to speed-up global traversals. A parallel traversal of the cells can be done using the `parallel_foreach_cell` function. The processing of the cells of the map will be spread among a number of threads that depends on the detected underlying hardware concurrency. In the following example, the displacement value value of each vertex is added to its position:
 ```c++
-// given a CMap2 map
-// given two CMap2::VertexAttribute<Vec3> position, displacement
-map.parallel_foreach_cell([&] (CMap2::Vertex v)
+// given a mesh m
+// given two Attribute<Vec3> position, displacement on VERTEX
+parallel_foreach_cell(m, [&] (Vertex v)
 {
-    position[v] += displacement[v];
+    value(m,position,v) += value(m,displacement,v);
 });
 ```
 
 It is also possible to aggregate results coming from the parallel processing of several threads. In the following example, the average value of an Edge attribute is computed in parallel. Each thread accumulates the values and number of elements corresponding to the fraction of the mesh that it processes, and then the global result is computed:
 ```c++
-// given a CMap2 map
-// given a CMap2::EdgeAttribute<double> length
+// given a Mesh m
+// given a attribute of type double on Edge length
 
 std::vector<double> sum_per_thread(thread_pool()->nb_workers(), 0.0);
 std::vector<uint32> nb_per_thread(thread_pool()->nb_workers(), 0);
 
-map.parallel_foreach_cell([&] (CMap2::Edge e)
+parallel_foreach_cell(m, [&] (Edge e)
 {
     uint32 thread_index = current_thread_index();
     sum_per_thread[thread_index] += length[e];
@@ -243,55 +262,43 @@ map.parallel_foreach_cell([&] (CMap2::Edge e)
 });
 
 double sum = 0.0;
-for (double d : sum_per_thread) sum += d;
+for (double d : sum_per_thread)
+    sum += d;
 uint32 nb = 0;
-for (uint32 n : nb_per_thread) nb += n;
-
+for (uint32 n : nb_per_thread)
+    nb += n;
 double average = sum / double(nb);
 ```
 
 <p class="warning"> Note that early stop is not available when doing parallel traversals. </p>
 
-### Masks
+### Customized traversal
 
-In their simplest form, the `foreach_cell` and the `parallel_foreach_cell` methods process all the cells of the map. A second parameter, which we call a __Mask__ can be given to these methods and alter the way they work.
+In their simplest form, the `foreach_cell` and the `parallel_foreach_cell` methods process all the cells of the mesh. But they can also be called with other kinds of parameters: a CellFilter<Mesh> and CellCache<Mesh>
 
-##### Filtering functions
 
-The most simple Mask takes the form of a callable, that takes as parameter the same type of Cell than the _processing_ callable. This _filtering_ callable returns a boolean value, and for each cell of the map, the _processing_ callable will only be called if the _filtering_ callable evaluated to true.
+#### CellFilter
+
+A CellFilter encaspsule a Mesh object, by adding some boolean functions, which allow to select the cells you want to traverse.
+The most simple Mask takes the form of a callable, that takes as parameter the same type of Cell than the _processing_ callable. This *filtering0 callable returns a boolean value, and for each cell of the map, the _processing_ callable will only be called if the _filtering_ callable evaluated to true.
 
 In the following example, the function will print only the faces for which the area is above a given threshold:
 ```c++
-void print_faces(const CMap2& map, const CMap2::FaceAttribute<double>& area, double threshold)
+void print_faces(const CMap2& m, const Attribute<double>& area, double threshold)
 {
-    map.foreach_cell(
-        [] (CMap2::Face f) { std::cout << f << std::endl; },
-        [&] (CMap2::Face f) -> bool { return area[f] > threshold; }
-    );
+	CellFilter<CMap2> cfm(m);
+	cfm.set_filter<Face>([&](Face f) -> bool {return (value<double>(cfm, area, f) > thresold;	});
+
+	foreach_cell(cfm, [&](Face f) -> bool { 
+		std::cout << f << std::endl;
+		return true;
+		});
 }
 ```
+A same CellFilter object can of course define one filter for each of its type of cell (for example Vertex, Edge, Face for CMap2)
 
-Of course, things become much more interesting and reusable when the function takes the map and a Mask as parameters, and can focus on what it does without even knowing how the given Mask is altering the traversal:
-```c++
-template <typename MASK>
-void print_faces(const CMap2& map, const MASK& mask)
-{
-    map.foreach_cell(
-        [] (CMap2::Face f) { std::cout << f << std::endl; },
-        mask
-    );
-}
-```
 
-The filtering Mask can then be defined directly when calling the function, using any local data to do its work:
-```c++
-// given a CMap2 map
-// given a CMap2::FaceAttribute<double> area
-// given a double value threshold
-print_faces(map, [&] (CMap2::Face f) -> bool { return area[f] > threshold; });
-```
-
-##### Cell filters
+<!-- ##### Cell filters
 
 There are cases in which a function has to traverse several types of cells. Passing an additional Mask parameter for each type of cell would not be a very versatile solution. That is why the `foreach_cell` and `parallel_foreach_cell` methods can also accept an object derived from the `CellFilters` class as their second parameter.
 
@@ -300,23 +307,23 @@ Such an object defines a filtering function for each type of filtered cell. The 
 class SelectedCells : public CellFilters
 {
 public:
-    SelectedCells(const CMap2& m, const CMap2::VertexAttribute<bool>& s) :
+    SelectedCells(const CMap2& m, const VertexAttribute<bool>& s) :
         map_(m), selected_(s)
     {}
 
-    inline bool filter(CMap2::Vertex v) const
+    inline bool filter(Vertex v) const
     {
         return selected_[v];
     }
 
-    inline bool filter(CMap2::Edge v) const
+    inline bool filter(Edge v) const
     {
-        return selected[CMap2::Vertex(v.dart)] && selected_[CMap2::Vertex(map_.phi2(v.dart))];
+        return selected[Vertex(v.dart)] && selected_[Vertex(map_.phi2(v.dart))];
     }
 
     inline uint32 filtered_cells() const
     {
-        return orbit_mask<CMap2::Vertex>() | orbit_mask<CMap2::Edge>();
+        return orbit_mask<Vertex>() | orbit_mask<Edge>();
     }
 
 private:
@@ -328,17 +335,17 @@ private:
 Such a filtering object can then be used like follows:
 ```c++
 // given a CMap2 map
-// given a CMap2::VertexAttribute<bool> selected
+// given a VertexAttribute<bool> selected
 
 template <typename MASK>
 void f(const CMap2& map, const MASK& mask)
 {
     map.parallel_foreach_cell(
-        [] (CMap2::Vertex v) { /* do something with v */ },
+        [] (Vertex v) { /* do something with v */ },
         mask
     );
     map.parallel_foreach_cell(
-        [] (CMap2::Edge e) { /* do something with e */ },
+        [] (Edge e) { /* do something with e */ },
         mask
     );
 }
@@ -367,14 +374,14 @@ However, in order to keep the `QuickTraversor` in sync with the map, special car
 In the following example, a `QuickTraversor` is built for the vertices of the map. Then an edge is cut, inserting a new vertex. In order for this new vertex to have a valid representing dart in the `QuickTraversor` internal attribute, this new vertex is updated:
 ```c++
 // given a CMap2 map
-CMap2::QuickTraversor qtrav(map);
-qtrav.build<CMap2::Vertex>();
+QuickTraversor qtrav(map);
+qtrav.build<Vertex>();
 map.foreach_cell(
-    [&] (CMap2::Vertex v) { /* do something with v */ },
+    [&] (Vertex v) { /* do something with v */ },
     qtrav
 );
-// given a CMap2::Edge e
-CMap2::Vertex v = map.cut_edge(e);
+// given a Edge e
+Vertex v = map.cut_edge(e);
 qtrav.update(v);
 ```
 
@@ -384,9 +391,9 @@ __FilteredQuickTraversor__
 
 A `FilteredQuickTraversor` is a variation of a `QuickTraversor`. In this modified version, the internal attribute is still filled with one dart per cell when calling the `build` method and the same updates have to be done in order to keep it in sync with the map. The difference is a new `set_filter<CellType>` method that provides a filter which is evaluated on-the-fly each time the `FilteredQuickTraversor` is used for the traversal of the cells. It can be seen as a combination of the efficiency of the traversal without marking and the versatility of the on-the-fly cells filtering.
 
-The dart selection customization is also available by giving a dart selection function as an additional parameter to the `build` and `update` methods.
+The dart selection customization is also available by giving a dart selection function as an additional parameter to the `build` and `update` methods. -->
 
-__CellCache__
+#### CellCache
 
 With the previous Masks, even when using a filtering function, all the cells of the map are always traversed and the filtering function is evaluated on-the-fly for each cell in order to decide if the processing function should be called on it or not. This can be great in a dynamic environment where the set of filtered cells changes regularly. But if the set of filtered cells is stable, and moreover if this set is small w.r.t. the number of cells of the map, a more efficient solution can be proposed.
 
@@ -397,13 +404,13 @@ If no argument is given, all the cells of the map will be put into the cache. Ho
 In the following example, all the degree 5 vertices are put into a cache which is then used in a traversal that is efficient and restricted to those vertices:
 ```c++
 // given a CMap2 map
-CMap2::CellCache cache(map);
-cache.build<CMap2::Vertex>([&] (CMap2::Vertex v)
+CellCache cache(map);
+cache.build<Vertex>([&] (Vertex v)
 {
     return map.degree(v) == 5;
 });
 map.foreach_cell(
-    [&] (CMap2::Vertex v) { /* do something with v */ },
+    [&] (Vertex v) { /* do something with v */ },
     cache
 );
 ```
@@ -415,9 +422,9 @@ map.foreach_cell(
 The "snapshot" property of the `CellCache` can be particularly exploited within algorithms that insert new cells during the traversal of the map. Indeed, without such a mechanism, the newly inserted cells could also be traversed resulting in a possible infinite loop. In the following example, all the edges of the map are cut by inserting a new vertex. Only the edges that existed at the moment the cache was built are considered:
 ```c++
 // given a CMap2 map
-CMap2::CellCache cache(map);
-cache.build<CMap2::Edge>();
-map.foreach_cell([&] (CMap2::Edge e) { map.cut_edge(e); }, cache );
+CellCache cache(map);
+cache.build<Edge>();
+map.foreach_cell([&] (Edge e) { map.cut_edge(e); }, cache );
 ``` 
 
 ## Local traversals
@@ -454,30 +461,30 @@ Two cells of equal dimension C1 and C2 are said to be __adjacent__ if they share
 CGoGN provides methods to traverse all these local neighborhoods. These methods all work in the same way: the callable given as second parameter is called on all the requested incident or adjacent cells of the cell given as first parameter. If this callable returns a boolean value, the traversal is stopped as soon as this value is false.
 
 In a 2-dimensional map, the local neighborhood traversal functions are the following:
- - `foreach_incident_edge(CMap2::Vertex, [] (CMap2::Edge) {})`
- - `foreach_incident_face(CMap2::Vertex, [] (CMap2::Face) {})`
- - `foreach_adjacent_vertex_through_edge(CMap2::Vertex, [] (CMap2::Vertex) {})`
- - `foreach_adjacent_vertex_through_face(CMap2::Vertex, [] (CMap2::Vertex) {})`
- - `foreach_incident_vertex(CMap2::Edge, [] (CMap2::Vertex) {})`
- - `foreach_incident_face(CMap2::Edge, [] (CMap2::Face) {})`
- - `foreach_adjacent_edge_through_vertex(CMap2::Edge, [] (CMap2::Edge) {})`
- - `foreach_adjacent_edge_through_face(CMap2::Edge, [] (CMap2::Edge) {})`
- - `foreach_incident_vertex(CMap2::Face, [] (CMap2::Vertex) {})`
- - `foreach_incident_edge(CMap2::Face, [] (CMap2::Edge) {})`
- - `foreach_adjacent_face_through_vertex(CMap2::Face, [] (CMap2::Face) {})`
- - `foreach_adjacent_face_through_edge(CMap2::Face, [] (CMap2::Face) {})`
- - `foreach_incident_vertex(CMap2::Volume, [] (CMap2::Vertex) {})`
- - `foreach_incident_edge(CMap2::Volume, [] (CMap2::Edge) {})`
- - `foreach_incident_face(CMap2::Volume, [] (CMap2::Face) {})`
+ - `foreach_incident_edge(Mesh, Vertex, [] (Edge) {})`
+ - `foreach_incident_face(Mesh, Vertex, [] (Face) {})`
+ - `foreach_adjacent_vertex_through_edge(Mesh, Vertex, [] (Vertex) {})`
+ - `foreach_adjacent_vertex_through_face(Mesh, Vertex, [] (Vertex) {})`
+ - `foreach_incident_vertex(Mesh, Edge, [] (Vertex) {})`
+ - `foreach_incident_face(Mesh, Edge, [] (Face) {})`
+ - `foreach_adjacent_edge_through_vertex(Mesh, Edge, [] (Edge) {})`
+ - `foreach_adjacent_edge_through_face(Mesh, Edge, [] (Edge) {})`
+ - `foreach_incident_vertex(Mesh, Face, [] (Vertex) {})`
+ - `foreach_incident_edge(Mesh, Face, [] (Edge) {})`
+ <!-- - `foreach_adjacent_face_through_vertex(Face, [] (Face) {})` -->
+ - `foreach_adjacent_face_through_edge(Mesh, Face, [] (Face) {})`
+ - `foreach_incident_vertex(Mesh, Volume, [] (Vertex) {})`
+ - `foreach_incident_edge(Mesh, Volume, [] (Edge) {})`
+ - `foreach_incident_face(Mesh, Volume, [] (Face) {})`
 
 The following example illustrates a function that computes the average of vertex attribute values over the vertices incident to a face in a 2-dimensional map:
 ```c++
 template <typename T>
-T average(const CMap2& map, CMap2::Face f, const CMap2::VertexAttribute<T>& attribute)
+T average(const Mesh& map, Face f, const Attribute<T>& attribute)
 {
     T result(0);
     uint32 nbv = 0;
-    map.foreach_incident_vertex(f, [&] (CMap2::Vertex v)
+    foreach_incident_vertex(m, f, [&] (Vertex v)
     {
         result += attribute[v];
         ++nbv;
@@ -488,14 +495,14 @@ T average(const CMap2& map, CMap2::Face f, const CMap2::VertexAttribute<T>& attr
 
 Given that all the equivalent neighborhood traversal functions are also defined in 3-dimensional maps, the previous function can be easily generalized to the computation of the average of vertex attribute values over the vertices incident to a n-cell in a n-dimensional map:
 ```c++
-template <typename T, typename CellType, typename MAP>
-T average(const MAP& map, CellType c, const typename MAP::template VertexAttribute<T>& attribute)
+template <typename T, typename CellType, typename MESH>
+T average(const MESH& m, CellType c, const typename Attribute<T>& attribute)
 {
     T result(0);
     uint32 nbv = 0;
-    map.foreach_incident_vertex(c, [&] (typename MAP::Vertex v)
+    foreach_incident_vertex(m, c, [&] (typename MESH::Vertex v)
     {
-        result += attribute[v];
+        result += value(m,attribute,v);
         ++nbv;
     });
     return result / nbv;
