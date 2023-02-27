@@ -91,7 +91,7 @@ CGoGN provides an efficient C++ implementation of oriented combinatorial maps. I
 
 ## Attribute containers
 
-The central data structure used in CGoGN is __attribute containers__. An attribute container is a set of __attributes__ of arbitrary type that all have the same number of records. Attributes can be dynamically added and removed in an attribute container. An index identifies a tuple of records, one in each attribute of the container. Records can be dynamically added and removed in an attribute container. Removed entries are actually only marked as removed and skipped during the traversals. They are left available for further record additions.
+The central data structure used in CGoGN is **attribute containers**. An attribute container is a set of __attributes__ of arbitrary type that all have the same number of records. Attributes can be dynamically added and removed in an attribute container. An index identifies a tuple of records, one in each attribute of the container. Records can be dynamically added and removed in an attribute container. Removed entries are actually only marked as removed and skipped during the traversals. They are left available for further record additions.
 
 Each __attribute__ is stored as a chunk array, i.e. a set of fixed size arrays. It allows the size of the attribute to grow while leaving all existing elements in place. Chunk size is chosen as a power of 2 so that the arithmetic operations needed to access the record of a given index (division and modulo) are very efficient.
 
@@ -134,38 +134,48 @@ Each map type provides several convenience internal definitions for its cells ty
 
 A `Vertex v` contains a Dart and can be thought of as the vertex of `v.dart`. Any other Dart of the same vertex orbit could equally represent the same cell.
 
-## Mesh abstraction
+## The Mesh abstraction
 
-In a goal of genericity, all informations about a map class are obtain through a traits class `cgogn::mesh_traits<Mesh>`. Instead of using directly Maps class, all our code will use a t emplate type parameter Mesh. A mesh can of course be a Map but also a object that represent a part of a map (CellFilter, CellCache as explained later,), but also any type thath furnish all necessary constants, types and functions definitions. 
+In a goal of genericity, all informations about a map class are obtain through a traits class `cgogn::mesh_traits<Mesh>`. Instead of using directly Maps class, all our code will use a template type parameter Mesh. A mesh can of course be a Map but also a object that represent a part of a map (CellFilter, CellCache as explained later), but also any type that could furnish all necessary constants, types and functions definitions.
 
-The introduced complexiy could totally disappear from your code just by adding some type definitions.  For example :
+The introduced complexiy could totally disappear from your code just by adding some type definitions in your class or function.  For example :
 
 ```c++
 template <typename Mesh>
 void my_algo(const Mesh& m)
 {
+    // cell definition
 	using Vertex = typename mesh_traits<Mesh>::Vertex;
 	using Face = typename mesh_traits<Mesh>::Face;
+    // attribute definition
 	template <typename T>
 	using Attribute = typename mesh_traits<Mesh>::Attribute<T>;
 ```
+Here we need to add the template keyword in each using definition, because we extract something from a template parameter.
 
-Example of following section will use these type definitions.
+In all examples of following sections will use these types definitions.
 
 ## Attributes
 
 Attributes of any type can be added in a map. The `mesh_traits<Mesh>::Attribute<T>` template class provides a way to access to the type `T` values associated to the  cells of a map.
-Some functions allow provided `add_attribute<T,CELL>(mesh,att_name)`, `get_attribute<T,CELL>(mesh,att_name)`, `remove_attribute<T,CELL>(mesh,att)`.
-Functions to add and get return a `std::shared_prt<mesh_traits<Mesh>::Attribute<T>>`, we encourage you to use the `auto` C++ keyword for local declaration.
+Some provided functions allow to *add*: `add_attribute<T,CELL>(mesh,att_name)`, *get* `get_attribute<T,CELL>(mesh,att_name)` or *remove* `remove_attribute<T,CELL>(mesh,att)` an attribute.
+Functions to *add* and *get* return a `std::shared_prt<mesh_traits<Mesh>::Attribute<T>>`, we encourage you to use the `auto` C++ keyword for local declaration.
 
-For example, a Vertex attribute storing an integer value on each vertex can be added in a Mesh (that could be a CMap2) type like that (using previous type definitions):
+For example, a Vertex attribute storing an integer value on each vertex can be added in a Mesh (that could be a CMap2) like that (using previous type definitions):
 ```c++
+using Mesh = CMap2;
+using Vertex = typename mesh_traits<Mesh>::Vertex;
 Mesh m;
+...
 auto attr = add_attribute<uint32, Vertex>(m, "attr");
 ```
 
 An existing attribute can also be obtained by its name. As the requested attribute may not exist in the map, the validity of the attribute can then be verified:
 ```c++
+using Mesh = CMap2;
+using Face = typename mesh_traits<Mesh>::Face;
+Mesh m;
+...
 auto area = get_attribute<double, Face>(m, "area");
 if (area == nullptr)
 {
@@ -175,22 +185,22 @@ if (area == nullptr)
 
 Attribute values can be traversed globally using the range-based for loop syntax:
 ```c++
-for (const T& v : *attr)
+for (const double& v : *area)
 {
     // do something with v
 }
 ```
+Remark: Here we have to used *area because the attribute's function return a shared_ptr<T>
 
-Given a cell of the map, the value associated to this cell for an attribute can be accessed using the value fonction:
+Given a cell of the map, the value associated to this cell for an attribute can be accessed using the `value<T>(Mesh&, Attribute<T>&, Cell)` fonction. For example given to a mesh, an face Attribute of double and two Faces f1, f2,  we can write:
 ```c++
-//given to Face f1, f2
-value<double>(m,attr,f1) = 3.4;
-double sum = value<double>(m,attr,f1) + value<double>(m,attr,f2);
+value<double>(m,area,f1) = 3.4;
+double sum = value<double>(m,area,f1) + value<double>(m,area,f2);
 ```
 
-Under the hood, this operator will first query the embedding index of the given cell and then access to the value stored at this index in the corresponding Cell attribute container. The embedding index of a cell does not depend on the accessed attribute. :
+Under the hood, this operator will first query the embedding index of the given cell and then access to the value stored at this index in the corresponding Cell attribute container. The embedding index of a cell does not depend on the accessed attribute. Here we have three attributes:
+Warning when using this code we bypass the checking of the Cell on which attribute is attached.
 ```c++
-// given a Face f
 uint32 findex = index_of(m,f);
 (*attr1)[findex] = (*attr2)[findex] + (*attr3)[findex];
 ```
