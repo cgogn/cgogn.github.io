@@ -15,30 +15,34 @@
   <body>
 
     <!-- HEADER -->
-	{% include header.html %}
+  {% include header.html %}
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <nav id="side_menu">
-        {% include menu.html %}
-	  </nav>
-      <section id="main_content" class="inner">
-        {{ content }}
-      </section>
-    </div>
+  {% include topmenu.html %}
+
+  <!-- MAIN CONTENT -->
+  <div id="main_content_wrap">
+    {% if page.id == 'documentation' %}
+      <div id="sidemenu_wrap">
+        {% include documentation_sidemenu.html %}
+      </div>
+    {% endif %}
+    <section>
+      {{ content }}
+    </section>
+  </div>
 
 	<!-- FOOTER  -->
 	{% include footer.html %}
 
-    {% if site.google_analytics %}
-      <script type="text/javascript">
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-        ga('create', '{{ site.google_analytics }}', 'auto');
-        ga('send', 'pageview');
-      </script>
+  {% if site.google_analytics %}
+    <script type="text/javascript">
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', '{{ site.google_analytics }}', 'auto');
+      ga('send', 'pageview');
+    </script>
 	{% endif %}
 
 	<script src="/assets/js/jquery-3.2.1.min.js"></script>

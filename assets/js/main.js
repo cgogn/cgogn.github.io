@@ -2,7 +2,7 @@
 //= require jquery.sticky
 
 $(document).ready(function(){
-    $("#side_menu>ul").sticky({
+    $("#sidemenu_wrap>ul").sticky({
 		topSpacing: 0,
 		widthFromWrapper: false
 	});
