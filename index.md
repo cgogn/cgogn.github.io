@@ -279,8 +279,7 @@ In their simplest form, the `foreach_cell` and the `parallel_foreach_cell` metho
 
 #### CellFilter
 
-A CellFilter encaspsule a Mesh object, by adding some boolean functions, which allow to select the cells you want to traverse.
-The most simple Mask takes the form of a callable, that takes as parameter the same type of Cell than the _processing_ callable. This *filtering0 callable returns a boolean value, and for each cell of the map, the _processing_ callable will only be called if the _filtering_ callable evaluated to true.
+A CellFilter encaspsule a Mesh object by adding a boolean functions on each type of cell you want to filer. Once CellFilter is created, it can be used as a normal mesh in a foreach.
 
 In the following example, the function will print only the faces for which the area is above a given threshold:
 ```c++
@@ -397,9 +396,9 @@ The dart selection customization is also available by giving a dart selection fu
 
 With the previous Masks, even when using a filtering function, all the cells of the map are always traversed and the filtering function is evaluated on-the-fly for each cell in order to decide if the processing function should be called on it or not. This can be great in a dynamic environment where the set of filtered cells changes regularly. But if the set of filtered cells is stable, and moreover if this set is small w.r.t. the number of cells of the map, a more efficient solution can be proposed.
 
-A `CellCache` can store a set of cells for each type of cell. These sets will be directly traversed by the `foreach_cell` or `parallel_foreach_cell` method. Its main public method is `build<CellType>` which builds the set of the mentioned cell type.
-
-If no argument is given, all the cells of the map will be put into the cache. However, the build method can also take a Mask as an optional argument to restrict the cached cells to the ones that are visible with the given Mask. Any kind of supported Mask, i.e. a filtering function, a `CellFilter` or a `CellTraversor` (but not the one we are trying to build) can be used.
+A `CellCache` can store a set of cells for each type of cell. These sets will be directly traversed by the `foreach_cell` or `parallel_foreach_cell` method.
+The most easy way to populate a cache is to use the build method `build<CellType>` which builds the set of the mentioned cell type, using the filtering bool function parameter.
+There is also an `add<CELL>` method for individual insertion, and a global clear() method.
 
 In the following example, all the degree 5 vertices are put into a cache which is then used in a traversal that is efficient and restricted to those vertices:
 ```c++
@@ -407,12 +406,12 @@ In the following example, all the degree 5 vertices are put into a cache which i
 CellCache cache(map);
 cache.build<Vertex>([&] (Vertex v)
 {
-    return map.degree(v) == 5;
+    return degree(map,v) == 5;
 });
-map.foreach_cell(
-    [&] (Vertex v) { /* do something with v */ },
-    cache
-);
+
+foreach_cell(cache, [&] (Vertex v)
+{ /* do something with v */ 
+});
 ```
 
 <p class="warning"> Note that if a new cell that satisifies the filter is inserted into the map, it will not be part of a cache that has already been built. </p>
@@ -422,9 +421,9 @@ map.foreach_cell(
 The "snapshot" property of the `CellCache` can be particularly exploited within algorithms that insert new cells during the traversal of the map. Indeed, without such a mechanism, the newly inserted cells could also be traversed resulting in a possible infinite loop. In the following example, all the edges of the map are cut by inserting a new vertex. Only the edges that existed at the moment the cache was built are considered:
 ```c++
 // given a CMap2 map
-CellCache cache(map);
+CellCache cache(m);
 cache.build<Edge>();
-map.foreach_cell([&] (Edge e) { map.cut_edge(e); }, cache );
+foreach_cell(cache, [&] (Edge e) { cut_edge(m,e); });
 ``` 
 
 ## Local traversals
@@ -467,12 +466,12 @@ In a 2-dimensional map, the local neighborhood traversal functions are the follo
  - `foreach_adjacent_vertex_through_face(Mesh, Vertex, [] (Vertex) {})`
  - `foreach_incident_vertex(Mesh, Edge, [] (Vertex) {})`
  - `foreach_incident_face(Mesh, Edge, [] (Face) {})`
- - `foreach_adjacent_edge_through_vertex(Mesh, Edge, [] (Edge) {})`
- - `foreach_adjacent_edge_through_face(Mesh, Edge, [] (Edge) {})`
+ <!-- - `foreach_adjacent_edge_through_vertex(Mesh, Edge, [] (Edge) {})` -->
+ <!-- - `foreach_adjacent_edge_through_face(Mesh, Edge, [] (Edge) {})` -->
  - `foreach_incident_vertex(Mesh, Face, [] (Vertex) {})`
  - `foreach_incident_edge(Mesh, Face, [] (Edge) {})`
  <!-- - `foreach_adjacent_face_through_vertex(Face, [] (Face) {})` -->
- - `foreach_adjacent_face_through_edge(Mesh, Face, [] (Face) {})`
+ <!-- - `foreach_adjacent_face_through_edge(Mesh, Face, [] (Face) {})` -->
  - `foreach_incident_vertex(Mesh, Volume, [] (Vertex) {})`
  - `foreach_incident_edge(Mesh, Volume, [] (Edge) {})`
  - `foreach_incident_face(Mesh, Volume, [] (Face) {})`
@@ -492,6 +491,8 @@ T average(const Mesh& map, Face f, const Attribute<T>& attribute)
     return result / nbv;
 }
 ```
+Of course here the type T must be numerical and provide operators += and /.
+
 
 Given that all the equivalent neighborhood traversal functions are also defined in 3-dimensional maps, the previous function can be easily generalized to the computation of the average of vertex attribute values over the vertices incident to a n-cell in a n-dimensional map:
 ```c++
@@ -511,15 +512,73 @@ T average(const MESH& m, CellType c, const typename Attribute<T>& attribute)
 
 ## Properties
 
-Several methods can provide some properties about the map or the cells.
+Several functions can provide some properties about the map or the cells.
 
  - nb_cells
- - nb_boundaries
- - same_cell
+ <!-- - nb_boundaries
+ - same_cell -->
  - degree
  - codegree
  - is_incident_to_boundary
- - is_adjacent_to_boundary
+ <!-- - is_adjacent_to_boundary -->
 
 ## Operators
+Each of the following operator is provided only if the *Mesh* type that allows it. For example the *flip_edge* operator has sense only on surfacic Mesh like CMap2
+- Vertex cut_edge(Mesh,Edge) 
+- Vertex collapse_edge(Mesh,Edge)
+- void flip_edge(Mesh,Edge)
+- void merge_incident_faces(Mesh,Edge)
+- Edge cutFace(Mesh)
+- Face cut_volume(Mesh,std::vector<Dart>)
 
+**Warning**: Operators do not fill or compute any attribute even the position.
+You can add the false as last parameter on each function if you want apply pure topological operators (embedding indices not updated)
+
+## Creation
+- Face add_face(Mesh, uint32)
+- Volume add_prism(Mesh, uint32)
+- Volume add_pyramid(Mesh, uint32)
+**Warning**: Operators do not fill or compute any attribute even the position.
+You can add the false as last parameter on each function if you want apply pure topological operators (embedding indices not updated)
+
+## Marking
+
+Ther are some classic problems like:
+- how be sure to not traverse twice the same cell.
+- how do no traverse the cells that I am currently adding in the mesh
+
+To avoid these problems we use Markers. CellMarkers for cells and DartMarker for low-level usage on maps
+
+### CellMarker
+
+A CellMarker if an object that allow to mark/unmark cell of a fixed type (second template parameter), and of course to test if the cell is marked.
+
+```c++
+// creation (here for vertices)
+CellMarker<Mesh,Vertex> cm{m};
+
+// test if a cell v is maked
+if (!cm.is_marked(v))
+
+// mark the cell	
+cm.mark(v)
+
+// unmark the cell
+cm.unmark(v);
+
+// possible to unmark all marked cell (call implicitly on destruction of CellMarker)
+cm.unmark_all();
+```
+
+You can use as many markers as you want, like color markers on a white table.
+
+A CellMarker use an attribute for storing its marking data. That could be totally unoptimal if you know that your are marking very few cells, because the cost of cleanning of the marker is
+linked to the size of the mesh. For these cases it is advise to use a `CellMarkerStore`. The interface is the same, but is store the marked cells are also stored in a vector, that allow to clean the marker very quickly. Warning unmark if here more costly than mark (find algorithm in a vector). You have also access to the vector of cells
+
+Use only CellMarkerStore if:
+- you mark few cells (compare to number of cells of the mesh)
+- you do a lot of mark and unmarkall but very few unmark (individual cells cells)
+- you do a lot unmarkall 
+- you do very few individual unmark
+
+### Dart marking (for low level programming on CMap)
